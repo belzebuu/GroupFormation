@@ -1,9 +1,31 @@
-# ProjectAssignment
+# Project Assignment
 
+
+This repository contains the software to assign students to projects.
+We assume given a set of project topics each with a subset of teams
+available with bounded size, and a set of students with preferences on
+the project topics. The task is to create teams of students to work on
+the available project topics.
+
+
+
+We assume that there is a local installation of
+[Gurobi](http://www.gurobi.com) and that its module for python is in
+the python path of the system.
+
+In the following we describe how to define the input data and the work
+flow.
+
+
+- Original Data
+- Transformed Data
+- Workflow
 
 
 
 ## Original Data
+
+We need two textual comma separeted files `projects.csv` and `students.csv`.
 
 `projects.csv` contains data on the project topics, the number of teams
 for each topic and the capacity of each group. Other information is
@@ -46,20 +68,23 @@ decreasing order of preference)
 - Studen full name 
 - Email address
 - Registration timestamp
-						
-						
-						
+
+
+
+`programs.csv`
+		
+The script `scripts/prepare-data.py` parses these files and generates
+tjhe files used by the program.
+
 
 ## Transformed Data
-
-* Data 
-
 
 Each instance consists of four files:
 @<code>tmp_projects.txt@</code>
 @<code>tmp_students.txt@</code>
 @<code>tmp_priorities.txt@</code>
 @<code>tmp_types.txt@</code>
+
 Fields are separated by semicolon.
 
 A further side constraint that is not discussed in the article must be
