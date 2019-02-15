@@ -33,8 +33,8 @@ flow.
 Original Data
 -------------
 
-We need three textual comma separeted files `projects.csv`,
-`students.csv` and `types.csv`.
+We need four textual comma separeted files `projects.csv`,
+`students.csv`, `types.csv` and `restrictions.csv`.
 
 `projects.csv` contains data on the project topics, the number of
 teams for each topic and the capacity of each group. Other information
@@ -56,6 +56,15 @@ the following fields:
 -   Need complementary short courses
 -   Working location
 
+Example:
+
+```{.example}
+1;a;Algorithms to identify something from something else;3;5;alle studier, dog ikke farmaci;01a;IMADA;Institut for Matematik og Datalogi;Skriftlig formidling og rapportskrivning (online),Rapportskrivning med LaTeX,Posterfremstilling;IMADA
+1;b;Algorithms to identify something from something else;3;5;alle studier, dog ikke farmaci;01b;IMADA;Institut for Matematik og Datalogi;Skriftlig formidling og rapportskrivning (online),Rapportskrivning med LaTeX,Posterfremstilling;IMADA
+2;;Alternative topic in project topics;3;5;alle studier, dog ikke farmaci;02;BI;Biologisk Institut;Skriftlig formidling og rapportskrivning (online),Naturvidenskabelig informationskompetence,Posterfremstilling;Biologisk Institut
+3;...
+```
+
 `students.csv` contains details on the students.
 
 The file has no header. Each field is separeted by semicolumn `;`.
@@ -74,6 +83,14 @@ following fields:
 -   Registration timestamp (we assume a setting in which only the registration with the latest timestamp is reported)
 
 
+```{.example}
+1;sffd90;biomedicin;9,75,76,65,44,39,41;XXXXXXXXXX;Mario Rossi;mario.rossi@student.org;2018-03-03 09:14:11
+2;sffe90;biomedicin;82,68,22,46,65,90,75,30,8,76,51;YYYYYYYYYY;Sabrina Rossi;sabrina.rossi@student.org;2018-03-03 10:54:50
+3;...
+```
+
+
+
 `types.csv` contains information about the compatibility between
 student and project types: for each student type, it provides the list
 of acceptable project types. The line starts with the student type and
@@ -83,18 +100,35 @@ types, although in the example of study programs, they indeed are
 supposed to be the same. Types are separeted by semicolon.
 
 
+`restrictions.csv` specifications of the restrictions on the number of
+teams open across different topics. For example, if the project topics
+26 and 40 are offered each to a maximum of two teams but the teacher
+responsible for both only wants to open at most two projects overall.
+
+Example:
+```
+2;26;40
+2;78;95
+2;27;86
+```
+
 
 Transformed Data
 ================
 
-The assignment program needs currently four files:
+TODO: remove need for data transformation 
+
+The assignment program needs currently five files:
 
 - `tmp_projects.txt`
 - `tmp_students.txt`
 - `tmp_priorities.txt`
 - `types.csv`
+- `restrictions.csv`
 
-Fields are separated by semicolon.  The last file `types.csv` is the
+An example is provided in `data/2016`
+
+Fields are separated by semicolon.  The file `types.csv` is the
 same as described above. The first three files are obtained by parsing
 the original data with the script ```scripts/prepare-data.py```.
 
@@ -170,6 +204,7 @@ fbd97a97bd6426ca20b778f615b15378;76;4
 ```
 
 `types.csv`
+-----------
 
 As explained above
 
@@ -179,12 +214,25 @@ As explained above
 "natbidat";"alle";"natbidat"
 ```
 
+`restrictions.csv`
+------------------
+
+
+```
+2;26;40
+2;78;95
+2;27;86
+```
+
+
+
+
 
 Work flow
 =========
 
 
-- In a directory, for example, `data/2019` prepare the input in
+- In a directory, for example, `data/2016` prepare the input in
    `projects.csv`, `students.csv` and `types.csv`
 
 - Make sure the encoding of the files is UTF8. If that is not the case
@@ -193,7 +241,7 @@ Work flow
 - Prepare the data in the transformed format: run
 
   ```
-  scripts/prepare-data.py -d data/2019
+  scripts/prepare-data.py -d data/2016
   ```
 
   Add the flag `-p` to make feasible the assignment of students to
@@ -204,21 +252,26 @@ Work flow
   feasible assignment. This is the minimax approach of the paper:
 
   ```
-  python src/main.py -d data/2019 -m minimax | tee 2019-minimax.txt; done
+  python3 src/main.py -d data/2016 -m minimax | tee 2016-minimax.txt
   ```
+  
+  The value found for the worst priority has to be put in the dictionary in `src/load_data.py`.
+  TODO: change this.
+
+
 
 - We solve the problem by
 
   ```
-  python src/main.py -d data/2019 -m minimax_instab_weighted -W owa | tee 2018-minimax_instab_weighted-owa.txt
+  python3 src/main.py -d data/2016 -m minimax_instab_weighted -W owa | tee 2018-minimax_instab_weighted-owa.txt
   ```
   This is the OWA approach of the paper.
 
   Alternatively, you can use one of the other two approaches: 
 
   ```
-  python src/main.py -d data/2019 -m minimax_instab_weighted -W powers | tee 2018-minimax_instab_weighted-powers.txt
-  python src/main.py -d data/2019 -m minimax_instab_weighted -W identity | tee 2018-minimax_instab_weighted-identity.txt
+  python3 src/main.py -d data/2016 -m minimax_instab_weighted -W powers | tee 2018-minimax_instab_weighted-powers.txt
+  python3 src/main.py -d data/2016 -m minimax_instab_weighted -W identity | tee 2018-minimax_instab_weighted-identity.txt
   ```
   These approaches produce assignments of different quality to choose from.
 
@@ -228,7 +281,7 @@ Work flow
 - Rewrite the solution with more details and different formats. 
 
   ```
-  src/report_sol.py -d data/2019 -s sln/sol-001.txt
+  src/report_sol.py -d data/2016 -s sln/sol-001.txt
   ```
 
   It reads the original data files and outputs in `out`.
