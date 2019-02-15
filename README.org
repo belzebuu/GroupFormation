@@ -1,56 +1,55 @@
-# ProjectAssignment
+* Procedure:
+
+- receive students.txt and projects.txt
+
+- run trunk/scripts/convert.sh to make these files in utf8
+  NOT needed if the file is already in UTF8!!!! 
+
+- run scripts/prepare_data.py data/2017
+
+- ../scripts/prepare-data.py -d . 
+  # # check anonymize=FALSE if for admin =TRUE if
+  # # to publish data 
+
+- create tmp_types.txt as for the year.
+  states to which projects studnets can be assigned.
+  "famarci"; "alle","farmaci"
+  "not farmaci"; "alle", "alle ikke farmaci"
+
+
+- run scripts/resume.R data/2017 to check the names of the
+  types. they are changed in prepare_data.py
+
+- launch2014.sh 
+  # # edit script (with owa)
+  # # edit load_data with starting high minimax
+  # # first run to find out minmax
+  # # consider three solutions 
+  # # minimax_instab_greedy_max
+  # # minimax_instab_weighted + owa
+  # # minimax_instab_weighted + identity
+  # # solution chosen between 1 and 3
+  writes in res and sln
+
+- src/report_sol.py -d data/2015 -s sln/sol_001.txt
+  # edit for Studieretininger
+  writes in out
+
+- analysis.R to produce popularity table
+
+- gnumeric out/output3.txt 
+
+- gnumeric out/output4.csv -> save as popularity.xls
+
+- Publish solution at:
+  http://www.imada.sdu.dk/~marco/Teaching/FF501/Ekstern/2016/out/
+  username: nat501
+  password: FF33
 
 
 
 
-## Original Data
 
-`projects.csv` contains data on the project topics, the number of teams
-for each topic and the capacity of each group. Other information is
-probably not relevant. 
-
-The file has no header.  Each field is separeted by semicolumn
-`;`. There is one line for each different team of a topic. Each line
-contains the following fields:
-
-
-- Topic identifier (eg, a number equal for all teams in the topic)
-- Team identifier
-- Title or topic
-- Min capacity
-- Max capacity
-- Study Program: topics can be grouped in different study
-                        programs to which students belong. Assignment of
-                        students through programs is controlled by TODO. 
-- Project identifier (a combination of topic and team identifier)
-- Offering institute abbreviation
-- Offering institute full name
-- Need complementary short courses
-- Working location
-
-
-`students.csv` contains details on the students.
-
-The file has no header. Each field is separeted by semicolumn `;`. There
-is a line for each student enrolled. Each line contains the following
-fields:
-
-- Group identifier (different students may have the same group
-  identifier if they enrolled together meaning that they want ot end in
-  the same tems).
-- Username 
-- Study program
-- Priority list (comma separated list of topic identifiers sorted in
-decreasing order of preference)  
-- Student identifier
-- Studen full name 
-- Email address
-- Registration timestamp
-						
-						
-						
-
-## Transformed Data
 
 * Data 
 
@@ -157,61 +156,6 @@ fbd97a97bd6426ca20b778f615b15378;76;4
 
 
 
-
-
-- Files in receive students.txt and projects.txt
-
-- run trunk/scripts/convert.sh to make these files in utf8
-  NOT needed if the file is already in UTF8!!!! 
-
-- run scripts/prepare_data.py data/2017
-
-- ../scripts/prepare-data.py -d . 
-  # # check anonymize=FALSE if for admin =TRUE if
-  # # to publish data 
-
-- create tmp_types.txt as for the year.
-  states to which projects studnets can be assigned.
-  "famarci"; "alle","farmaci"
-  "not farmaci"; "alle", "alle ikke farmaci"
-
-
-- run scripts/resume.R data/2017 to check the names of the
-  types. they are changed in prepare_data.py
-
-- launch2014.sh 
-  # # edit script (with owa)
-  # # edit load_data with starting high minimax
-  # # first run to find out minmax
-  # # consider three solutions 
-  # # minimax_instab_greedy_max
-  # # minimax_instab_weighted + owa
-  # # minimax_instab_weighted + identity
-  # # solution chosen between 1 and 3
-  writes in res and sln
-
-- src/report_sol.py -d data/2015 -s sln/sol_001.txt
-  # edit for Studieretininger
-  writes in out
-
-- analysis.R to produce popularity table
-
-- gnumeric out/output3.txt 
-
-- gnumeric out/output4.csv -> save as popularity.xls
-
-- Publish solution at:
-  http://www.imada.sdu.dk/~marco/Teaching/FF501/Ekstern/2016/out/
-  username: nat501
-  password: FF33
-
-
-
-
-
-
-
-
 * Data for Psychology
 
 
@@ -240,5 +184,3 @@ src/report_sol.py -d data/2018-psy -s sln/sol_001.txt
 
 cp res/2018-psy-owa-minimax_instab_weighted.txt out
 cp -r out ~/WWWpublic/Psychology/2018/
-
-
