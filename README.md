@@ -281,7 +281,7 @@ Work flow
 - Rewrite the solution with more details and different formats. 
 
   ```
-  src/report_sol.py -d data/2016 -s sln/sol-001.txt
+  python3 src/report_sol.py -d data/2016 -s sln/sol-001.txt
   ```
 
   It reads the original data files and outputs in `out`.
