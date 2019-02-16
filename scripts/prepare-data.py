@@ -45,6 +45,8 @@ def identifier(read_name):
 
 def program_transform(program):
     program = program.lower()
+    return program
+    # this is for SDU
     if program=="naturvidenskab, biologi og datalogi":
         program="not_pharma"
     elif program=="alle studier, dog ikke farmaci": # for 2018
