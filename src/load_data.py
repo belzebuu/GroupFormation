@@ -4,28 +4,31 @@ import sys
 import os
 import csv
 import json
+import codecs
 from collections import defaultdict
 from collections import OrderedDict
+from collections import namedtuple
 
 class Problem:
-    def __init__(self, dirname, group_reg):
-        self.projects=self.read_projects(dirname),
-        self.std_values=self.read_students(dirname)[0],
-        self.std_ranks=self.read_students(dirname)[1],
-        self.groups=self.read_groups(dirname, group_reg)[0],
-        self.std_type=self.read_groups(dirname, group_reg)[1],
+    def __init__(self, dirname):
+        self.study_programs=set()
+        self.project_details, self.topics, self.projects = self.read_projects(dirname)
+        self.student_details, self.priorities, self.groups, self.std_type = self.read_students(dirname)
+        self.std_values, self.std_ranks = self.calculate_ranks_values()
+
         #self.minimax_sol = self.minimax_sol(dirname),
-        self.valid_prjtype = self.valid_prjtype(dirname),
+        self.valid_prjtype = self.type_compliance(dirname)
         self.restrictions=self.read_restrictions(dirname)
         self.minimax_sol = 0
         # self.__dict__.update(kwds)
 
 
     def program_transform(self, program):
-        study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
+        #study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
         program = program.lower()
-        if program not in study_program:
-            sys.exit("program not recognized: {}".format(program))
+        self.study_programs.add(program)
+        #if program not in study_programs:
+        #    sys.exit("program not recognized: {}".format(program))
         return program
 
 
@@ -33,278 +36,174 @@ class Problem:
         projects_file=dirname+"/projects.csv"
         print("read ",projects_file)
 
-        with open(dirname+"/projects.csv", "r", encoding="utf-8") as f:
-                lines=f.readlines();
-
-        topics = {}
-        project_details = {}
-        for line in lines:
-            if line[0]=="#": continue
-            line=line.rstrip('\r\n');
-            parts=line.split(";");
-            nid = int(parts[0]);
+        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="iso8859_1"),delimiter=";")
+        
+        topics = {}        
+        project_details = OrderedDict()
+        for line in reader:
+            if line[0][0]=="#": continue
+            #line=line.rstrip('\r\n');
+            #parts=line.split(";");
+            nid = int(line[0]);
             if (nid in list(topics.keys())):
-                topics[nid]=topics[nid]+[parts[1]];
+                topics[nid]=topics[nid]+[line[1]];
             else:
-                topics[nid]=[parts[1]];
-            id=parts[0]+parts[1];
+                topics[nid]=[line[1]];
+            id=line[0]+line[1];
 
-                #MinProjektType="natbidat" if parts[5].lower()=="naturvidenskab, biologi og datalogi" else parts[5].lower()
+                #MinProjektType="natbidat" if line[5].lower()=="naturvidenskab, biologi og datalogi" else line[5].lower()
                 #MinProjektType="farmaci" if string.find(MinProjektType.lower(),"farma",0,5) >= 0 else MinProjektType.lower()
-            MinProjektType=self.program_transform(parts[5])
-
-            project_details[id]=dict(
-                        ProjektNr=parts[0],
-                        Undergruppe=parts[1],
-                        ProjektTitle=parts[2].strip("\r\n\""),
-                        Min=int(parts[3]),
-                        Max=int(parts[4]),
-                        ProjektType=parts[5].lower(),
+            MinProjektType=self.program_transform(line[5])
+            # ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
+            project_details[id]=OrderedDict(
+                        ProjektNr=line[0],
+                        Undergruppe=line[1],
+                        ProjektTitle=line[2].strip("\r\n\""),
+                        Min=int(line[3]),
+                        Max=int(line[4]),
+                        ProjektType=line[5].lower(),
                         MinProjektType=MinProjektType,
-                        ProjektNrBB=(len(parts)>6 and parts[6] or ""),
-                        Institutforkortelse=(len(parts)>6 and parts[7] or ""),
-                        Institut=(len(parts)>6 and parts[8] or ""),
-                        Minikursus_obl=(len(parts)>6 and parts[9] or ""),
-                        # Minikursus_anb=(len(parts)==12 and parts[10] or ""),
-                        Gruppeplacering=(((len(parts)>6 and len(parts)==12) and parts[11]) or (len(parts)>6 and parts[10]) or "") # to take into account format before 2012
+                        #ProjektNrBB=(len(line)>6 and line[6] or ""),
+                        InstitutForkortelse=(len(line)>6 and line[6] or ""),
+                        #Institut=(len(line)>6 and line[8] or ""),
+                        Minikursus_obl=(len(line)>6 and line[7] or ""),
+                        # Minikursus_anb=(len(line)==12 and line[10] or ""),
+                        Gruppeplacering=(len(line)>6 and line[8] or "")
+                        # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
                         )
         
-        capacity = sum([project_dict[k]["Max"] for k in project_dict])
+        print(self.study_programs)
+        
+        capacity = sum([project_details[k]["Max"] for k in project_details])
         n_stds=10
         if (capacity < n_stds):
             answer = input("Not enough capacity from all projects\nHandle this by including a dummy project with the needed capacity? (y/n)\n")
-        if answer in ['Y','y']:
-            sys.exit("to implement")
-            file.write(str(len(project_dict)+1)+";;1;"+str(n_stds-capacity)+";"+program+"\n");
-            project_dict[len(project_dict)+1]=n_stds-capacity
+            if answer in ['Y','y']:
+                sys.exit("to implement")
+                file.write(str(len(project_dict)+1)+";;1;"+str(n_stds-capacity)+";"+program+"\n");
+                project_dict[len(project_dict)+1]=n_stds-capacity
             
+        
         filehandle = codecs.open( os.path.join("log", "projects.json"),  "w","utf-8")
         json.dump(project_details, fp=filehandle, sort_keys=True, indent=4, separators=(',', ': '),  ensure_ascii=False)
         
         projects = defaultdict(list)
         
-        Team = namedtuple("Team",("min","min","type"))
+        Team = namedtuple("Team",("min","max","type"))
         for topic in topics:
             for t in topics[topic]:
-                id = topic+t
+                id = str(topic)+t
                 projects[topic].append(Team(project_details[id]["Min"],
                                         project_details[id]["Max"],
                                         project_details[id]["MinProjektType"]
                                         )
-        return topics, project_details, projects
+                )
+        return (project_details, topics, projects)
 
 
 
-def write_projects(dirname, n_stds):
+    def read_students(self, dirname):
+        students_file=dirname+"/students.csv"
+        print("read ",students_file)
+
+        reader = csv.reader(open(students_file,"r", encoding="iso8859_1"),delimiter=";")
+        
+        student_details = {}
+        # GruppeId; Brugernavn; StudType; Prioteringsliste; Studentnavn;  Email; Tilmeldingstidspunkt
+        for line in reader:
+            if line[0][0]=="#": continue
+            username=line[1].lower()
+            student_details[username]=dict(
+                GruppeID=line[0],
+                Brugernavn=username,
+                StudType=line[2].lower(),
+                # Studieretning=line[3].lower(),
+                Prioriteringsliste=[int(x) for x in line[3].split(",")],
+                #CprNr=(len(line)>4 and line[4] or ""),
+                #Fornavne=(len(parts)>4 and parts[5] or ""),
+                #Efternavn=(len(parts)>4 and parts[6] or ""),
+                Navn=(len(line)>4 and line[4] or ""),
+                Email=(len(line)>4 and line[5] or ""),
+                Tilmeldingstidspunkt=(len(line)>4 and line[6] or "")
+            )
+
+        filehandle = codecs.open( os.path.join("log", "studetns.json"),  "w","utf-8")
+        json.dump(student_details, fp=filehandle, sort_keys=True, indent=4, separators=(',', ': '),  ensure_ascii=False)
+        
+        prior = {u : student_details[u]["Prioriteringsliste"] for u in student_details}
+        tmp = {u : (student_details[u]["GruppeID"],student_details[u]["StudType"]) for u in student_details}
+        group_ids = {student_details[u]["GruppeID"] for u in student_details}
+        groups = {g: list(filter(lambda u: student_details[u]["GruppeID"]==g, student_details.keys())) for g in group_ids}
+        
+        student_types = {student_details[u]["StudType"] for u in student_details}
+        print(student_types)
+        std_type = {u : student_details[u]["StudType"] for u in student_details}
+                
+        return (student_details, prior, groups, std_type)
 
 
-    project_dict={}
-    file=open(dirname+"/tmp_projects.txt",'w');
-    for line in lines:
-        if line[0]=="#": continue
-        line=line.strip("\r\n");
-        parts=line.split(";");
-        program = program_transform(parts[5].lower())
-        file.write(parts[0]+";"+parts[1]+";"+parts[3]+";"+parts[4]+";"+program+"\n");
-        project_dict[parts[0]]=int(parts[4])
-
-
-    file.close();
-    print("wrote tmp_projects.txt\n")
-    return project_dict
-
-
-
-
-
-
-def read_students(dirname):
-        with open(dirname+"/students.csv", "r") as f:
-                lines=f.readlines();
-
-        ## print type_compatibility
-
-        global prior;
-        global groups;
-        for line in lines:
-                if line[0]=="#": continue
-                line=line.strip('\r\n');
-                parts=line.split(";");
-                priorities=parts[3].split(",");
-                username=parts[1].lower()
-                nid=parts[0]
-                studtype=parts[2].lower()
-                prior[username]=priorities;
-                groups[username]=[nid,studtype];
-
-                student_details[username]=dict(
-                        GruppeID=nid,
-                        Brugernavn=username,
-                        StudType=studtype,
-                        Studieretning=studtype,
-                        Prioriteringsliste=[int(x) for x in parts[3].split(",")],
-                        CprNr=(len(parts)>4 and parts[4] or ""),
-                        #Fornavne=(len(parts)>4 and parts[5] or ""),
-                        #Efternavn=(len(parts)>4 and parts[6] or ""),
-                        Navn=(len(parts)>4 and parts[5] or ""),
-                        Email=(len(parts)>4 and parts[6] or ""),
-                        Tilmeldingstidspunkt=(len(parts)>4 and parts[7] or "")
-                        );
-
-        if studieretninger:
-                reader = csv.reader(open(dirname+"/Studieretninger2014.csv", "rb"),delimiter=",")
-                rheader=False
-                try:
-                        for row in reader:
-                                if not rheader:
-                                        rheader=True
-                                        continue;
-                                username=row[2].split("@")[0].lower()
-                                if username in student_details:
-                                        student_details[username]["Studieretning"]=row[3]
-                                ## print username,student_details[username];
-                except csv.Error as e:
-                        sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
-        elif False:
-                for username in student_details:
-                        student_details[username]["Studieretning"]="NAT"
-
-def write_students(dirname):
-    print("read students.csv")
-    students_file=dirname+"/students.csv";
-    f = open(students_file, "r")
-    lines=f.readlines();
-    f.close();
-
-    students_file=dirname+"/tmp_students.txt";
-    file=open(students_file,'w');
-    for line in lines:
-        if line[0] == "#": continue
-        line=line.strip('\n\r');
-        parts=line.split(";");
-        if len(parts)>8: # name separeted from surname
-            name = parts[5]+parts[6]
-        id=identifier(parts[1])
-        program = program_transform(parts[2].lower())
-        file.write(parts[0]+";"+id+";"+program+'\n');
-
-    file.close();
-    print("wrote tmp_students.txt\n")
-    return len(lines)
-
-
-
-def write_priorities(dirname, prj_dict, prioritize_all=False):
-    print("read students.csv")
-    students_file=dirname+"/students.csv";
-    f = open(students_file, "r")
-    lines=f.readlines();
-    f.close();
-
-    priorities_file=dirname+"/tmp_priorities.txt";
-    file=open(priorities_file,'w');
-    for line in lines:
-        if line[0]!= "#":
-
-            line=line.replace("\n","");
-            line=line.replace("\r","");
-            parts=line.split(";");
-            priorities=parts[3].split(",");
+    def calculate_ranks_values(self, prioritize_all=False):        
+        std_values = {}
+        std_ranks = {}
+        for u in self.student_details:
+            priorities = self.student_details[u]["Prioriteringsliste"]
+            
             n=len(priorities);
             i=7
             j=1
 
-            id=identifier(parts[1])
+            values = {}
+            ranks = {}
             ##print priorities;
             for p in priorities:
-                file.write(id+";"+str(int(p))+";"+str(j)+";"+str(2**i)+'\n');
+                values[p] = 2**i
+                ranks[p] = j
                 j+=1
                 if i>0:
                     i=i-1;
 
             ## if we need to ensure feasibility we can insert a low priority for all other projects
             if prioritize_all:
-                    prj_set = set(prj_dict.keys()) - set(priorities)
-                    prj_set = list(prj_set)
-                    prj_list = random.sample( prj_set,k=len(prj_set)  )
-                    for p in prj_list:
-                            file.write(id+";"+str(int(p))+";"+str(j)+";"+str(2**i)+'\n');
-                            j+=1
-    print("wrote tmp_priority.txt\n")
-    file.close();
+                prj_set = set(self.project_details.keys()) - set(priorities)
+                prj_set = list(prj_set)
+                prj_list = random.sample( prj_set,k=len(prj_set)  )
+                for p in prj_list:
+                    values[p] = 2**i
+                    ranks[p] = j
+                    j+=1
+    
+            std_values[u] = values 
+            std_ranks[u] = ranks
+
+        print(std_ranks)
+        return std_values, std_ranks
 
 
 
-def valid_prjtype(dirname):
-    """ reads types """
-    reader = csv.reader(open(dirname+"/types.csv", "r"), delimiter=";")
-    valid_prjtypes = {}
-    try:
-        for row in reader:
-            valid_prjtypes[row[0]] = [row[t] for t in range(1, len(row))]
-    except csv.Error as e:
-        sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
-        # return {'biologi': ["alle", "natbidat"],"farmaci": ["alle","farmaci"],"natbidat": ["alle","natbidat"]}
-    print(valid_prjtypes)
-    return valid_prjtypes
-
-
-def read_restrictions(dirname):
-    """ reads types """
-    reader = csv.reader(open(dirname+"/restrictions.csv", "r"), delimiter=";")
-    restrictions = []
-    try:
-        for row in reader:
-            restrictions += [{"cum": int(row[0]), "topics": [int(row[t])
+    def read_restrictions(self,dirname):
+        """ reads types """
+        reader = csv.reader(open(dirname+"/restrictions.csv", "r"), delimiter=";")
+        restrictions = []
+        try:
+            for row in reader:
+                restrictions += [{"cum": int(row[0]), "topics": [int(row[t])
                                                              for t in range(1, len(row))]}]
-    except csv.Error as e:
-        sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
-    return restrictions
+        except csv.Error as e:
+            sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
+        return restrictions
 
 
-def read_groups(dirname, group_reg):
-    """ reads students' names and organize them in groups"""
-    """ reads student type, eg, general nat student or farma std. """
-
-    reader = csv.reader(open(dirname+"/tmp_students.txt", "r"), delimiter=";")
-
-    groups = {}
-    std_type = {}
-    row_number = 1
-    try:
-        for row in reader:
-            if group_reg:
-                if row[0] in groups:
-                    groups[row[0]].append(row[1])
-                else:
-                    groups[row[0]] = [row[1]]
-            else:
-                groups[row_number] = [row[1]]
-            row_number = row_number+1
-            std_type[row[1]] = row[2]
-    except csv.Error as e:
-        sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
-
-    return groups, std_type
 
 
-def read_students(dirname):
-    """ reads students' priorities"""
-    reader = csv.reader(open(dirname+"/tmp_priorities.txt", "r"), delimiter=";")
-
-    std_values = {}
-    std_ranks = {}
-    try:
-        for row in reader:
-            if row[0] in std_values:
-                std_values[row[0]].update(dict([(int(row[1]), int(row[3]))]))
-                std_ranks[row[0]].update(dict([(int(row[1]), int(row[2]))]))
-            else:
-                std_values[row[0]] = dict([(int(row[1]), int(row[3]))])
-                std_ranks[row[0]] = dict([(int(row[1]), int(row[2]))])
-    except csv.Error as e:
-        sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
-
-    return std_values, std_ranks
-
-
+    def type_compliance(self, dirname):
+        """ reads types """
+        reader = csv.reader(open(dirname+"/types.csv", "r"), delimiter=";")
+        valid_prjtypes = {}
+        try:
+            for row in reader:
+                valid_prjtypes[row[0]] = [row[t] for t in range(1, len(row))]
+        except csv.Error as e:
+            sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
+            # return {'biologi': ["alle", "natbidat"],"farmaci": ["alle","farmaci"],"natbidat": ["alle","natbidat"]}
+        print(valid_prjtypes)
+        return valid_prjtypes

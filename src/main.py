@@ -28,7 +28,7 @@ from models_hooker import *
 
 
 
-def main(argv):
+def main():
     try:
         usage = "usage: %prog [options] DIRNAME"
         parser = OptionParser(usage)
@@ -47,9 +47,15 @@ def main(argv):
     if not len(args)==1:
         parser.error("Directory missing")
 
-    directory=args[0]
+    dirname=args[0]
     problem=Problem(dirname)
     solutions=model_ip(problem)[1]
+
+    stat = check_sol(solutions,problem,soldirname="sln")
+    for st in stat:
+        log = ['x']+[model]+[elapsed]+[os.path.basename(dirname)]+st
+        print('%s' % ' '.join(map(str, log)))
+
 
     if Wmethod not in ["identity","owa", "powers"]:
         sys.exit("Wmethod not recognized")
