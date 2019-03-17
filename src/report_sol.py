@@ -215,15 +215,15 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
             x)+prob.topics[x][0]]["MinProjektType"] in prob.valid_prjtype[peek]]
         # valid_prjs=filter(lambda x: prob.project_details[str(x)+prob.topics[x][0]]["MinProjektType"]==peek or prob.project_details[str(x)+prob.topics[x][0]]["ProjektType"]=='alle', sorted(prob.topics.keys()))
         # print set(prob.student_details[s]["prob.prioritiesiteringsliste"])
-        diff = set(prob.student_details[s]["Prioriteringsliste"]) - set(valid_prjs)
+        diff = set(prob.student_details[s]["PrioriteringsListe"]) - set(valid_prjs)
         if len(diff) > 0:
             tmp = []
             for p in diff:
                 tmp.append(p)
             prob.student_details[s]["DerfraIkkeTilladt"] = tmp
 
-    f.write("Brugernavn;StudType;ProjektNr;Undergruppe;ProjektTitel;ProjektType;ProjektStatus;TildeltPrio;prob.prioritiesiteringsliste;DerfraIkkeTilladt;Min;Max;")
-    f.write("LedigePladser;ProjektNrBB;CprNR;Navn;Email;GruppeID;Tilmeldingstidspunkt;Institutforkortelse;")
+    f.write("Brugernavn;StudType;ProjektNr;Undergruppe;ProjektTitel;ProjektType;TildeltPrio;PrioriteringsListe;DerfraIkkeTilladt;Min;Max;")
+    f.write("LedigePladser;Navn;Email;GruppeID;Tilmeldingstidspunkt;Institutforkortelse;")
     f.write("Institut;Minikursus obligatorisk;Gruppeplacering\n")
     students.sort()
     for s in students:
@@ -247,7 +247,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
                     prob.student_details[s]["DerfraIkkeTilladt"],
                     prob.project_details[pID]["Min"],
                     prob.project_details[pID]["Max"],
-                    # prob.project_details[pID]["LedigePladser"],
+                    prob.project_details[pID]["LedigePladser"],
                     # prob.project_details[pID]["ProjektNrBB"],
                     # prob.student_details[s]["CprNr"],
                     # prob.student_details[s]["Fornavne"],
