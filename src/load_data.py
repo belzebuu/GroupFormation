@@ -36,7 +36,7 @@ class Problem:
         projects_file = dirname+"/projects.csv"
         print("read ", projects_file)
 
-        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="iso8859_1"), delimiter=";")
+        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="utf8"), delimiter=";") # iso8859_1
 
         topics = defaultdict(list)
         project_details = OrderedDict()
@@ -104,7 +104,7 @@ class Problem:
         students_file = dirname+"/students.csv"
         print("read ", students_file)
 
-        reader = csv.reader(open(students_file, "r", encoding="iso8859_1"), delimiter=";")
+        reader = csv.reader(open(students_file, "r", encoding="utf8"), delimiter=";")
 
         student_details = {}
         # GruppeId; Brugernavn; StudType; Prioteringsliste; Studentnavn;  Email; Tilmeldingstidspunkt
