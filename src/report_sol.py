@@ -177,7 +177,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
                               prob.student_details[sID]["Email"]))
                     if (prob.project_details[pID]["InstitutForkortelse"] == "IMADA"):
                         print(str(prob.student_details[sID]["Navn"])+" "+prob.student_details[sID]
-                              ["Email"]+" "+str(prob.student_details[sID]["prob.prioritiesiteringsliste"]))
+                              ["Email"]+" "+str(prob.student_details[sID]["prob.prioritiesiteringsListe"]))
                 # studentassignments.append([sID,sType,pID,ptitle,ptype,
                 #                                                   underfull,wishlist])
             f1.write("Underfull? ")
@@ -229,7 +229,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
     for s in students:
         pID = str(int(ass_std2team[s][0]))+ass_std2team[s][1]
         # print pID;
-        priolist = prob.student_details[s]["Prioriteringsliste"]
+        priolist = prob.student_details[s]["PrioriteringsListe"]
         valgt = [x for x in range(1, len(priolist)+1) if int(priolist[x-1])
                  == int(prob.project_details[pID]["ProjektNr"])]
         gottenprio = '%s' % ', '.join(map(str, valgt))
@@ -354,7 +354,7 @@ def institute_wise():
                 assigned = 0
                 for sID in sorted(ass_team2std[pID]):
                     s = str(prob.student_details[sID]["Brugernavn"])+" " + \
-                        str(prob.student_details[sID]["prob.prioritiesiteringsliste"])
+                        str(prob.student_details[sID]["prob.prioritiesiteringsListe"])
                     # f.write(s+"\n")
                     assigned = assigned+1
                     if i != retning2inst[prob.student_details[sID]["Studieretning"]]:
@@ -389,7 +389,7 @@ def institute_wise():
         lshared = {}
         for i in sorted(topics_per_institute.keys()):
             shared[i] = [v for v in topics_per_institute[i]
-                         if v in prob.student_details[s]["prob.prioritiesiteringsliste"][:5]]
+                         if v in prob.student_details[s]["prob.prioritiesiteringsListe"][:5]]
             lshared[i] = len(shared[i])
             # print s+" "+', '.join(map(str,shared[i]))+" "+i
             # print s+" "+str(len(shared[i]))+" "+i
