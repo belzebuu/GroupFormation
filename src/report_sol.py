@@ -233,7 +233,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
         valgt = [x for x in range(1, len(priolist)+1) if int(priolist[x-1])
                  == int(prob.project_details[pID]["ProjektNr"])]
         gottenprio = '%s' % ', '.join(map(str, valgt))
-        f.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" %
+        f.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" %
                 (
                     prob.student_details[s]["Brugernavn"],
                     prob.student_details[s]["StudType"],
