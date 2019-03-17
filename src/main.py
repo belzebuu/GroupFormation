@@ -43,20 +43,22 @@ def main():
     problem = Problem(dirname)
 
     model = "minimax"
-    solutions = model_ip(problem)[1]
 
+    minimax, solutions = model_ip(problem)
     stat = check_sol(solutions, problem, soldirname="sln")
+
     for st in stat:
-        log = ['x']+[model]+[elapsed]+[os.path.basename(dirname)]+st
+        log = ['x']+[model]+solutions[0].solved+[os.path.basename(dirname)]+st
         print('%s' % ' '.join(map(str, log)))
 
-    if Wmethod not in ["identity", "owa", "powers"]:
+    if options.Wmethod not in ["identity", "owa", "powers"]:
         sys.exit("Wmethod not recognized")
 
     start = clock()
     model = "minimax_instab_weighted"
-    model = model+"-"+Wmethod
-    solutions = model_ip_weighted(problem, Wmethod, True, problem.minimax_sol, options.allsol)[1]
+    model = model+"-"+options.Wmethod
+    value, solutions = model_ip_weighted(problem, options.Wmethod, True,
+                                         int(minimax), options.allsol)
 
     elapsed = (clock() - start)
 

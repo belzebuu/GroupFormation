@@ -38,7 +38,7 @@ class Problem:
 
         reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="iso8859_1"), delimiter=";")
 
-        topics = {}
+        topics = defaultdict(list)
         project_details = OrderedDict()
         for line in reader:
             if line[0][0] == "#":
@@ -46,10 +46,8 @@ class Problem:
             # line=line.rstrip('\r\n');
             # parts=line.split(";");
             nid = int(line[0])
-            if (nid in list(topics.keys())):
-                topics[nid] = topics[nid]+[line[1]]
-            else:
-                topics[nid] = [line[1]]
+            topics[nid].append(line[1])
+
             id = line[0]+line[1]
 
             #MinProjektType="natbidat" if line[5].lower()=="naturvidenskab, biologi og datalogi" else line[5].lower()
@@ -164,8 +162,10 @@ class Problem:
                           str(p)+" which is not available")
                     answer = input(
                         "Continue? (y/n)\n")
-                    if answer not in ['Y', 'y']:
+                    if answer not in ['', 'Y', 'y']:
                         sys.exit("You decided to stop")
+                    else:
+                        continue
                 values[p] = 2**i
                 ranks[p] = j
                 j += 1
@@ -185,7 +185,7 @@ class Problem:
             std_values[u] = values
             std_ranks[u] = ranks
 
-        print(std_ranks)
+        # print(std_ranks)
         return std_values, std_ranks
 
     def read_restrictions(self, dirname):
