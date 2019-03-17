@@ -222,7 +222,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
                 tmp.append(p)
             prob.student_details[s]["DerfraIkkeTilladt"] = tmp
 
-    f.write("Brugernavn;StudType;ProjektNr;Undergruppe;ProjektTitel;ProjektType;TildeltPrio;PrioriteringsListe;DerfraIkkeTilladt;Min;Max;")
+    f.write("Brugernavn;StudType;ProjektNr;Undergruppe;ProjektTitel;ProjektType;ProjektStatus;TildeltPrio;PrioriteringsListe;DerfraIkkeTilladt;Min;Max;")
     f.write("LedigePladser;Navn;Email;GruppeID;Tilmeldingstidspunkt;Institutforkortelse;")
     f.write("Institut;Minikursus obligatorisk;Gruppeplacering\n")
     students.sort()
@@ -241,9 +241,9 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
                     prob.project_details[pID]["Undergruppe"],
                     prob.project_details[pID]["ProjektTitle"],
                     prob.project_details[pID]["ProjektType"],
-                    # prob.project_details[pID]["ProjektStatus"],
+                    prob.project_details[pID]["ProjektStatus"],
                     gottenprio,
-                    str(prob.student_details[s]["Prioriteringsliste"]),
+                    str(prob.student_details[s]["PrioriteringsListe"]),
                     prob.student_details[s]["DerfraIkkeTilladt"],
                     prob.project_details[pID]["Min"],
                     prob.project_details[pID]["Max"],

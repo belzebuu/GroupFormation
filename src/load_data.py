@@ -36,7 +36,8 @@ class Problem:
         projects_file = dirname+"/projects.csv"
         print("read ", projects_file)
 
-        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="utf8"), delimiter=";") # iso8859_1
+        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="utf8"),
+                            delimiter=";")  # iso8859_1
 
         topics = defaultdict(list)
         project_details = OrderedDict()
@@ -117,7 +118,7 @@ class Problem:
                 Brugernavn=username,
                 StudType=line[2].lower(),
                 # Studieretning=line[3].lower(),
-                Prioriteringsliste=[int(x) for x in line[3].split(",")],
+                PrioriteringsListe=[int(x) for x in line[3].split(",")],
                 #CprNr=(len(line)>4 and line[4] or ""),
                 #Fornavne=(len(parts)>4 and parts[5] or ""),
                 #Efternavn=(len(parts)>4 and parts[6] or ""),
@@ -130,7 +131,7 @@ class Problem:
         json.dump(student_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
-        prior = {u: student_details[u]["Prioriteringsliste"] for u in student_details}
+        prior = {u: student_details[u]["PrioriteringsListe"] for u in student_details}
         tmp = {u: (student_details[u]["GruppeID"], student_details[u]["StudType"])
                for u in student_details}
         group_ids = {student_details[u]["GruppeID"] for u in student_details}
@@ -147,7 +148,7 @@ class Problem:
         std_values = {}
         std_ranks = {}
         for u in self.student_details:
-            priorities = self.student_details[u]["Prioriteringsliste"]
+            priorities = self.student_details[u]["PrioriteringsListe"]
 
             n = len(priorities)
             i = 7
