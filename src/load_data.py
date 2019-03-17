@@ -164,7 +164,10 @@ class Problem:
                         "Continue? (y/n)\n")
                     if answer not in ['', 'Y', 'y']:
                         sys.exit("You decided to stop")
-                    else:
+                    else:  # we increse the priorities anyway.
+                        j += 1
+                        if i > 0:
+                            i = i-1
                         continue
                 values[p] = 2**i
                 ranks[p] = j

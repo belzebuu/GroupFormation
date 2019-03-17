@@ -48,7 +48,7 @@ for k in list(retning2inst.keys()):
 # needs two files:
 # model.tbl and sol.txt
 
-
+# dismissed
 def scansol(tablefile):
     maps = {}
     f = open(tablefile)
@@ -98,7 +98,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
     # print groups
 
     counter = [0]*50
-    prioritiesized = 0
+    prioritized = 0
     unassigned = 0
 
     for s in students:
@@ -108,7 +108,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
         if (ass_std2team[s][0] in prob.priorities[s]):
             counter[prob.priorities[s].index(ass_std2team[s][0])] += 1
         else:
-            prioritiesized += 1
+            prioritized += 1
             print("someone assigned to smth not in his priorities!")
 
     groups = {i: g for g in prob.groups for i in prob.groups[g]}
@@ -282,9 +282,9 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
     s = s+"\nNumb. of active teams/teams offered: " + \
         str(count_teams)+"/"+str(len(prob.project_details))
     s = s+"\nStudents unassigned: "+str(unassigned)
-    s = s+"\nStudents assigned outside of preference: "+str(prioritiesized)+"\n"
+    s = s+"\nStudents assigned outside of preference: "+str(prioritized)+"\n"
     for i in range(max_p):
-        out = str(i+1)+". prioritiesitized: "+str(counter[i])
+        out = str(i+1)+". priority: students "+str(counter[i])
         s = s+out+"\n"
 
     print(s)
