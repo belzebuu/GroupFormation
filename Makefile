@@ -1,4 +1,4 @@
-YEAR=2019
+YEAR=2019-bachelor
 
 publish: 
 	/bin/rm -rf /home/marco/WWWpublic/Teaching/FF501/Ekstern/${YEAR}/out

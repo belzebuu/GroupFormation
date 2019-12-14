@@ -5,6 +5,7 @@ import os
 import csv
 import json
 import codecs
+import pandas as pd
 from collections import defaultdict
 from collections import OrderedDict
 from collections import namedtuple
@@ -16,16 +17,17 @@ class Problem:
         self.project_details, self.topics, self.projects = self.read_projects(dirname)
         self.student_details, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
+        self.check_tot_capacity()
         self.std_values, self.std_ranks = self.calculate_ranks_values()
 
-        #self.minimax_sol = self.minimax_sol(dirname),
+        # self.minimax_sol = self.minimax_sol(dirname),
         self.valid_prjtype = self.type_compliance(dirname)
         self.restrictions = self.read_restrictions(dirname)
         self.minimax_sol = 0
         # self.__dict__.update(kwds)
 
     def program_transform(self, program):
-        #study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
+        # study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
         program = program.lower()
         self.study_programs.add(program)
         # if program not in study_programs:
@@ -36,53 +38,35 @@ class Problem:
         projects_file = dirname+"/projects.csv"
         print("read ", projects_file)
 
-        reader = csv.reader(open(dirname+"/projects.csv", "r", encoding="utf8"),
-                            delimiter=";")  # iso8859_1
-
         topics = defaultdict(list)
-        project_details = OrderedDict()
-        for line in reader:
-            if line[0][0] == "#":
-                continue
-            # line=line.rstrip('\r\n');
-            # parts=line.split(";");
-            nid = int(line[0])
-            topics[nid].append(line[1])
+        # We assume header to be:
+        # ID;team;title;min_cap;max_cap;type;prj_id;instit;institute;mini;wl
+        # OLD: ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
+        project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
+        project_table.index = project_table["prj_id"]
+        project_details = project_table.to_dict("index", into=OrderedDict)
+        # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
+        topics = {k: list(v) for k, v in project_table.groupby('ID')['team']}
+        print(topics)
 
-            id = line[0]+line[1]
-
-            #MinProjektType="natbidat" if line[5].lower()=="naturvidenskab, biologi og datalogi" else line[5].lower()
-            #MinProjektType="farmaci" if string.find(MinProjektType.lower(),"farma",0,5) >= 0 else MinProjektType.lower()
-            MinProjektType = self.program_transform(line[5])
-            # ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
-            project_details[id] = OrderedDict(
-                ProjektNr=line[0],
-                Undergruppe=line[1],
-                ProjektTitle=line[2].strip("\r\n\""),
-                Min=int(line[3]),
-                Max=int(line[4]),
-                ProjektType=line[5].lower(),
-                MinProjektType=MinProjektType,
-                #ProjektNrBB=(len(line)>6 and line[6] or ""),
-                InstitutForkortelse=(len(line) > 6 and line[6] or ""),
-                #Institut=(len(line)>6 and line[8] or ""),
-                Minikursus_obl=(len(line) > 6 and line[7] or ""),
-                # Minikursus_anb=(len(line)==12 and line[10] or ""),
-                Gruppeplacering=(len(line) > 6 and line[8] or "")
-                # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
-            )
+        # OrderedDict(
+        # ProjektNr=row[],
+        # Undergruppe=line[1],
+        # ProjektTitle=line[2].strip("\r\n\""),
+        # Min=int(line[3]),
+        # Max=int(line[4]),
+        # ProjektType=line[5].lower(),
+        # MinProjektType=self.program_transform(row["type"]),
+        # ProjektNrBB=(len(line)>6 and line[6] or ""),
+        # InstitutForkortelse=(len(line) > 6 and line[6] or ""),
+        # Institut=(len(line)>6 and line[8] or ""),
+        # Minikursus_obl=(len(line) > 6 and line[7] or ""),
+        # Minikursus_anb=(len(line)==12 and line[10] or ""),
+        # Gruppeplacering=(len(line) > 6 and line[8] or "")
+        # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
+        # )
 
         print(self.study_programs)
-
-        capacity = sum([project_details[k]["Max"] for k in project_details])
-        n_stds = 10
-        if (capacity < n_stds):
-            answer = input(
-                "Not enough capacity from all projects\nHandle this by including a dummy project with the needed capacity? (y/n)\n")
-            if answer in ['Y', 'y']:
-                sys.exit("to implement")
-                file.write(str(len(project_dict)+1)+";;1;"+str(n_stds-capacity)+";"+program+"\n")
-                project_dict[len(project_dict)+1] = n_stds-capacity
 
         filehandle = codecs.open(os.path.join("log", "projects.json"),  "w", "utf-8")
         json.dump(project_details, fp=filehandle, sort_keys=True,
@@ -94,53 +78,74 @@ class Problem:
         for topic in topics:
             for t in topics[topic]:
                 id = str(topic)+t
-                projects[topic].append(Team(project_details[id]["Min"],
-                                            project_details[id]["Max"],
-                                            project_details[id]["MinProjektType"]
+                projects[topic].append(Team(project_details[id]["min_cap"],
+                                            project_details[id]["max_cap"],
+                                            project_details[id]["type"]
                                             )
                                        )
         return (project_details, topics, projects)
+
+    def check_tot_capacity(self):
+        capacity = sum([self.project_details[k]["max_cap"] for k in self.project_details])
+        n_stds = len(self.student_details)
+        if (capacity < n_stds):
+            answer = input(
+                "Not enough capacity from all projects\nHandle this by including a dummy project with the needed capacity? (y/n)\n")
+            if answer in ['Y', 'y']:
+                sys.exit("to implement")
+                # file.write(str(len(project_dict)+1)+";;1;"+str(n_stds-capacity)+";"+program+"\n")
+                #project_dict[len(project_dict)+1] = n_stds-capacity
 
     def read_students(self, dirname):
         students_file = dirname+"/students.csv"
         print("read ", students_file)
 
-        reader = csv.reader(open(students_file, "r", encoding="utf8"), delimiter=";")
+        # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
+        student_table = pd.read_csv(dirname+"/students.csv", sep=";")
+        student_table["username"].apply(lambda x: x.lower())
+        student_table.index = student_table["username"]
+        student_details = student_table.to_dict("index", into=OrderedDict)
 
-        student_details = {}
-        # GruppeId; Brugernavn; StudType; Prioteringsliste; Studentnavn;  Email; Tilmeldingstidspunkt
-        for line in reader:
-            if line[0][0] == "#":
-                continue
-            username = line[1].lower()
-            student_details[username] = dict(
-                GruppeID=line[0],
-                Brugernavn=username,
-                StudType=line[2].lower(),
-                # Studieretning=line[3].lower(),
-                PrioriteringsListe=[int(x) for x in line[3].split(",")],
-                #CprNr=(len(line)>4 and line[4] or ""),
-                #Fornavne=(len(parts)>4 and parts[5] or ""),
-                #Efternavn=(len(parts)>4 and parts[6] or ""),
-                Navn=(len(line) > 4 and line[4] or ""),
-                Email=(len(line) > 4 and line[5] or ""),
-                Tilmeldingstidspunkt=(len(line) > 4 and line[6] or "")
-            )
+        for s in student_details:
+            student_details[s]["priority_list"] = [
+                int(x.strip()) for x in student_details[s]["priority_list"].split(",")]
+
+        #reader = csv.reader(open(students_file, "r", encoding="utf8"), delimiter=";")
+
+        # student_details = {}
+        # # GruppeId; Brugernavn; StudType; Prioteringsliste; Studentnavn;  Email; Tilmeldingstidspunkt
+        # for line in reader:
+        #     if line[0][0] == "#":
+        #         continue
+        #     username = line[1].lower()
+        #     student_details[username] = dict(
+        #         GruppeID=line[0],
+        #         Brugernavn=username,
+        #         StudType=line[2].lower(),
+        #         # Studieretning=line[3].lower(),
+        #         PrioriteringsListe=[int(x) for x in line[3].split(",")],
+        #         # CprNr=(len(line)>4 and line[4] or ""),
+        #         # Fornavne=(len(parts)>4 and parts[5] or ""),
+        #         # Efternavn=(len(parts)>4 and parts[6] or ""),
+        #         Navn=(len(line) > 4 and line[4] or ""),
+        #         Email=(len(line) > 4 and line[5] or ""),
+        #         Tilmeldingstidspunkt=(len(line) > 4 and line[6] or "")
+        #     )
 
         filehandle = codecs.open(os.path.join("log", "studetns.json"),  "w", "utf-8")
         json.dump(student_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
-        prior = {u: student_details[u]["PrioriteringsListe"] for u in student_details}
-        tmp = {u: (student_details[u]["GruppeID"], student_details[u]["StudType"])
+        prior = {u: student_details[u]["priority_list"] for u in student_details}
+        tmp = {u: (student_details[u]["grp_id"], student_details[u]["type"])
                for u in student_details}
-        group_ids = {student_details[u]["GruppeID"] for u in student_details}
+        group_ids = {student_details[u]["grp_id"] for u in student_details}
         groups = {g: list(
-            filter(lambda u: student_details[u]["GruppeID"] == g, student_details.keys())) for g in group_ids}
+            filter(lambda u: student_details[u]["grp_id"] == g, student_details.keys())) for g in group_ids}
 
-        student_types = {student_details[u]["StudType"] for u in student_details}
+        student_types = {student_details[u]["type"] for u in student_details}
         print(student_types)
-        std_type = {u: student_details[u]["StudType"] for u in student_details}
+        std_type = {u: student_details[u]["type"] for u in student_details}
 
         return (student_details, prior, groups, std_type)
 
@@ -148,7 +153,7 @@ class Problem:
         std_values = {}
         std_ranks = {}
         for u in self.student_details:
-            priorities = self.student_details[u]["PrioriteringsListe"]
+            priorities = self.student_details[u]["priority_list"]
 
             n = len(priorities)
             i = 7
