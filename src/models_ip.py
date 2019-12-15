@@ -291,6 +291,7 @@ def model_lex(prob, v, h, z, minimax, instability, direction):
                         == prob.projects[p][t][1]*y[p, t], 'ub_%s' % (t))
             m.addConstr(quicksum(a[g]*x[g, p, t] for g in list(prob.groups.keys()))
                         >= prob.projects[p][t][0]*y[p, t], 'lb_%s' % (t))
+            m.addConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
     # enforce restrictions on number of teams open across different topics:
     for rest in prob.restrictions:

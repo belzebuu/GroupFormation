@@ -52,7 +52,6 @@ def main():
         log = ['x']+[model]+solutions[0].solved+[os.path.basename(dirname)]+st
         print('%s' % ' '.join(map(str, log)))
 
-    sys.exit(0)
     if options.Wmethod not in ["identity", "owa", "powers"]:
         sys.exit("Wmethod not recognized")
 
