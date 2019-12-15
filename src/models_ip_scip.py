@@ -2,8 +2,8 @@ from utils import *
 from load_data import *
 from time import *
 
-import pyscipopt as pso
-from pyscipopt import Model
+from pyscipopt import *
+
 
 from functools import reduce
 
