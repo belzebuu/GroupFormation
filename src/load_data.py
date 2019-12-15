@@ -1,5 +1,6 @@
 #! /usr/bin/python
-# import argparse; # only from python 2.7
+# coding=utf-8
+
 import sys
 import os
 import csv
@@ -47,7 +48,6 @@ class Problem:
         project_details = project_table.to_dict("index", into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
         topics = {k: list(v) for k, v in project_table.groupby('ID')['team']}
-        print(topics)
 
         # OrderedDict(
         # ProjektNr=row[],
@@ -65,8 +65,6 @@ class Problem:
         # Gruppeplacering=(len(line) > 6 and line[8] or "")
         # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
         # )
-
-        print(self.study_programs)
 
         filehandle = codecs.open(os.path.join("log", "projects.json"),  "w", "utf-8")
         json.dump(project_details, fp=filehandle, sort_keys=True,
@@ -132,11 +130,11 @@ class Problem:
         #         Tilmeldingstidspunkt=(len(line) > 4 and line[6] or "")
         #     )
 
-        filehandle = codecs.open(os.path.join("log", "studetns.json"),  "w", "utf-8")
+        filehandle = codecs.open(os.path.join("log", "students.json"),  "w", "utf-8")
         json.dump(student_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
-        prior = {u: student_details[u]["priority_list"] for u in student_details}
+        priorities = {u: student_details[u]["priority_list"] for u in student_details}
         tmp = {u: (student_details[u]["grp_id"], student_details[u]["type"])
                for u in student_details}
         group_ids = {student_details[u]["grp_id"] for u in student_details}
@@ -147,7 +145,7 @@ class Problem:
         print(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
 
-        return (student_details, prior, groups, std_type)
+        return (student_details, priorities, groups, std_type)
 
     def calculate_ranks_values(self, prioritize_all=False):
         std_values = {}

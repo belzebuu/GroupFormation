@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+# coding=utf-8
 
 # Text files required:
 # students-enc.txt
@@ -132,14 +133,14 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
         for j in sorted(prob.topics[i]):
             pID = str(int(i))+j
             s = "ProjectID: "+pID+"\n"
-            s = s + "Project title: \""+prob.project_details[pID]["ProjektTitle"]+"\""+"\n"
+            s = s + "Project title: \""+prob.project_details[pID]["title"]+"\""+"\n"
             s = s + "Popularity: (tot. "+str(popularity[i][0])+") " + \
                 str(popularity[i][1:(max_p+1)])+"\n"
-            s = s + "Project type: "+prob.project_details[pID]["ProjektType"]+"\n"
-            s = s + "Min participants: "+str(prob.project_details[pID]["Min"])+"\n"
-            s = s + "Max participants: "+str(prob.project_details[pID]["Max"])+"\n"
+            s = s + "Project type: "+prob.project_details[pID]["title"]+"\n"
+            s = s + "Min participants: "+str(prob.project_details[pID]["min_cap"])+"\n"
+            s = s + "Max participants: "+str(prob.project_details[pID]["max_cap"])+"\n"
             std_assigned = pID in ass_team2std and len(ass_team2std[pID]) or 0
-            prob.project_details[pID]["LedigePladser"] = prob.project_details[pID]["Max"]-std_assigned
+            prob.project_details[pID]["LedigePladser"] = prob.project_details[pID]["max_cap"]-std_assigned
             s = s + "Available places: "+str(prob.project_details[pID]["LedigePladser"])+"\n"
             if (prob.project_details[pID]["LedigePladser"] < 0):
                 sys.exit('project %s has LedigePladser %s ' %
@@ -147,7 +148,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
             s = s + "Assigned students IDs:"+"\n"
             if std_assigned == 0:
                 prob.project_details[pID]["ProjektStatus"] = "Not open"
-            elif prob.project_details[pID]["Min"] > std_assigned:
+            elif prob.project_details[pID]["min_cap"] > std_assigned:
                 prob.project_details[pID]["ProjektStatus"] = "Underfull"
             else:
                 prob.project_details[pID]["ProjektStatus"] = "Not underfull"
@@ -157,12 +158,12 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
             if (std_assigned > 0):
                 f2.write("%s: %s\n" %
                          (pID,
-                          prob.project_details[pID]["ProjektTitle"])
+                          prob.project_details[pID]["title"])
                          )
 
-            if (prob.project_details[pID]["InstitutForkortelse"] == "IMADA"):
-                print("\n"+prob.project_details[pID]["ProjektNrBB"] +
-                      ": "+prob.project_details[pID]["ProjektTitle"])
+            if (prob.project_details[pID]["instit"] == "IMADA"):
+                print("\n "+str(prob.project_details[pID]["ID"]) +
+                      ": "+prob.project_details[pID]["title"])
                 print("Popularity: (tot. "+str(popularity[i]
                                                [0])+") "+str(popularity[i][1:(max_p+1)]))
 
@@ -172,16 +173,16 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
                     wishlist = prob.priorities[sID]
                     sType = prob.std_type[sID]
                     f2.write("%s, %s\n" %
-                             (prob.student_details[sID]["Navn"],
+                             (prob.student_details[sID]["full_name"],
                               # prob.student_details[sID]["Efternavn"],
-                              prob.student_details[sID]["Email"]))
-                    if (prob.project_details[pID]["InstitutForkortelse"] == "IMADA"):
-                        print(str(prob.student_details[sID]["Navn"])+" "+prob.student_details[sID]
-                              ["Email"]+" "+str(prob.student_details[sID]["prob.prioritiesiteringsListe"]))
+                              prob.student_details[sID]["email"]))
+                    if (prob.project_details[pID]["instit"] == "IMADA"):
+                        print(str(prob.student_details[sID]["full_name"])+" "+prob.student_details[sID]
+                              ["email"]+" "+str(prob.student_details[sID]["priority_list"]))
                 # studentassignments.append([sID,sType,pID,ptitle,ptype,
                 #                                                   underfull,wishlist])
             f1.write("Underfull? ")
-            s = prob.project_details[pID]["Min"] > std_assigned and "Yes" or "No"
+            s = prob.project_details[pID]["min_cap"] > std_assigned and "Yes" or "No"
             s += (std_assigned > 0 and " " or " (Not open)")
             f1.write(str(s)+"\n")
             f1.write("\n")
@@ -209,10 +210,10 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
 
     for s in students:  # problem.groups.keys():
         prob.student_details[s]["DerfraIkkeTilladt"] = []
-        peek = prob.student_details[s]["StudType"]
+        peek = prob.student_details[s]["type"]
         # d={'biologi': ["alle", "natbidat"],"farmaci": ["alle","farmaci"],"natbidat": ["alle","natbidat"]} # which projects for students
         valid_prjs = [x for x in sorted(prob.topics.keys()) if prob.project_details[str(
-            x)+prob.topics[x][0]]["MinProjektType"] in prob.valid_prjtype[peek]]
+            x)+prob.topics[x][0]]["type"] in prob.valid_prjtype[peek]]
         # valid_prjs=filter(lambda x: prob.project_details[str(x)+prob.topics[x][0]]["MinProjektType"]==peek or prob.project_details[str(x)+prob.topics[x][0]]["ProjektType"]=='alle', sorted(prob.topics.keys()))
         # print set(prob.student_details[s]["prob.prioritiesiteringsliste"])
         diff = set(prob.student_details[s]["PrioriteringsListe"]) - set(valid_prjs)
@@ -229,7 +230,7 @@ def check_sol(ass_std2team, ass_team2std, prob, popularity, max_p):  # tablefile
     for s in students:
         pID = str(int(ass_std2team[s][0]))+ass_std2team[s][1]
         # print pID;
-        priolist = prob.student_details[s]["PrioriteringsListe"]
+        priolist = prob.student_details[s]["priority_list"]
         valgt = [x for x in range(1, len(priolist)+1) if int(priolist[x-1])
                  == int(prob.project_details[pID]["ProjektNr"])]
         gottenprio = '%s' % ', '.join(map(str, valgt))
@@ -312,9 +313,9 @@ def count_popularity(prob):
             popularity[pId][i+1] += 1
     for i in sorted(prob.topics.keys()):
         pID = str(int(i))+prob.topics[i][0]
-        f.write(str(i)+";\""+prob.project_details[pID]["ProjektTitle"]+"\";")
-        f.write(prob.project_details[pID]["ProjektType"]+";" +
-                prob.project_details[pID]["InstitutForkortelse"]+";")
+        f.write(str(i)+";\""+prob.project_details[pID]["title"]+"\";")
+        f.write(prob.project_details[pID]["type"]+";" +
+                prob.project_details[pID]["instit"]+";")
         for j in range(0, (max_p+1)):
             f.write(str(popularity[i][j])+";")
         f.write("\n")

@@ -9,6 +9,7 @@ import sys
 from load_data import *
 from utils import *
 from models_ip import *
+from models_ip_scip import *
 from models_ip_weighted import *
 from check_sol import *
 
@@ -44,13 +45,14 @@ def main():
 
     model = "minimax"
 
-    minimax, solutions = model_ip(problem)
+    minimax, solutions = model_ip_scip(problem)
     stat = check_sol(solutions, problem, soldirname="sln")
 
     for st in stat:
         log = ['x']+[model]+solutions[0].solved+[os.path.basename(dirname)]+st
         print('%s' % ' '.join(map(str, log)))
 
+    sys.exit(0)
     if options.Wmethod not in ["identity", "owa", "powers"]:
         sys.exit("Wmethod not recognized")
 
