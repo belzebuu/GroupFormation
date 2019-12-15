@@ -1,29 +1,29 @@
 ,ID,team,title,min_cap,max_cap,type,prj_id,instit,institute,mini,wl,popularity_tot,popularity_details,places_available,team_status,assigned
-1a,1,a,Exact algorithms for the bounded degree vertex cover problem,0,4,datalogi,1a,IMADA,IMADA,,,8,"[1, 2, 0, 0, 1, 2, 0, 0, 2, 0, 0, 0]",3,Underfull,['marlo17']
+1a,1,a,Exact algorithms for the bounded degree vertex cover problem,0,4,datalogi,1a,IMADA,IMADA,,,8,"[1, 2, 0, 0, 1, 2, 0, 0, 2, 0, 0, 0]",2,Underfull,"['marlo17', 'thbuh17']"
 1b,1,b,Exact algorithms for the bounded degree vertex cover problem,0,4,datalogi,1b,IMADA,IMADA,,,8,"[1, 2, 0, 0, 1, 2, 0, 0, 2, 0, 0, 0]",4,Not open,[]
 2a,2,a,Exact algorithms for the bounded degree vertex cover problem,0,4,datalogi,2a,IMADA,IMADA,,,14,"[0, 0, 3, 0, 2, 2, 4, 3, 0, 0, 0, 0]",4,Not open,[]
 2b,2,b,Exact algorithms for the bounded degree vertex cover problem,0,4,datalogi,2b,IMADA,IMADA,,,14,"[0, 0, 3, 0, 2, 2, 4, 3, 0, 0, 0, 0]",4,Not open,[]
-3a,3,a,Advanced Topics in Compiler Construction,0,4,datalogi,3a,IMADA,IMADA,,,28,"[5, 0, 3, 7, 3, 7, 2, 1, 0, 0, 0, 0]",0,Full,"['alnis17', 'frbol17', 'janie15', 'vipor16']"
+3a,3,a,Advanced Topics in Compiler Construction,0,4,datalogi,3a,IMADA,IMADA,,,28,"[5, 0, 3, 7, 3, 7, 2, 1, 0, 0, 0, 0]",1,Underfull,"['alnis17', 'frbol17', 'janie15']"
 3b,3,b,Advanced Topics in Compiler Construction,0,4,datalogi,3b,IMADA,IMADA,,,28,"[5, 0, 3, 7, 3, 7, 2, 1, 0, 0, 0, 0]",3,Underfull,['deand17']
 4a,4,a,Implementing choreography extraction,0,4,datalogi,4a,IMADA,IMADA,,,21,"[1, 1, 1, 0, 8, 7, 1, 0, 0, 2, 0, 0]",3,Underfull,['phtra14']
 4b,4,b,Implementing choreography extraction,0,4,datalogi,4b,IMADA,IMADA,,,21,"[1, 1, 1, 0, 8, 7, 1, 0, 0, 2, 0, 0]",4,Not open,[]
 5a,5,a,Sorting networks,0,4,datalogi,5a,IMADA,IMADA,,,25,"[0, 1, 2, 4, 1, 4, 10, 0, 0, 1, 2, 0]",4,Not open,[]
 5b,5,b,Sorting networks,0,4,datalogi,5b,IMADA,IMADA,,,25,"[0, 1, 2, 4, 1, 4, 10, 0, 0, 1, 2, 0]",4,Not open,[]
-6a,6,a,Machine learning based stratification of cancer subtypes,0,4,datalogi,6a,IMADA,IMADA,,,38,"[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",0,Full,"['anmad17', 'miols17', 'siban17', 'vimix17']"
-6b,6,b,Machine learning based stratification of cancer subtypes,0,4,datalogi,6b,IMADA,IMADA,,,38,"[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",0,Full,"['andpo17', 'jaege16', 'jakoj17', 'mikkj17']"
+6a,6,a,Machine learning based stratification of cancer subtypes,0,4,datalogi,6a,IMADA,IMADA,,,38,"[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",1,Underfull,"['antho17', 'frban17', 'vipor16']"
+6b,6,b,Machine learning based stratification of cancer subtypes,0,4,datalogi,6b,IMADA,IMADA,,,38,"[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",1,Underfull,"['andpo17', 'jakoj17', 'mikkj17']"
 7a,7,a,Constraint programming and algorithm portfolio,0,4,datalogi,7a,IMADA,IMADA,,,10,"[0, 0, 0, 2, 3, 1, 2, 0, 0, 0, 0, 2]",4,Not open,[]
 7b,7,b,Constraint programming and algorithm portfolio,0,4,datalogi,7b,IMADA,IMADA,,,10,"[0, 0, 0, 2, 3, 1, 2, 0, 0, 0, 0, 2]",4,Not open,[]
-8a,8,a,Data Analysis on Real World Data,0,4,datalogi,8a,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",0,Full,"['antho17', 'eiros15', 'frban17', 'madla17']"
-8b,8,b,Data Analysis on Real World Data,0,4,datalogi,8b,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",2,Underfull,"['erand17', 'iyabd17']"
-8c,8,c,Data Analysis on Real World Data,0,4,datalogi,8c,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",0,Full,"['betou17', 'mbisc17', 'mipos17', 'trhav17']"
+8a,8,a,Data Analysis on Real World Data,0,4,datalogi,8a,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",0,Full,"['eiros15', 'erand17', 'iyabd17', 'madla17']"
+8b,8,b,Data Analysis on Real World Data,0,4,datalogi,8b,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",0,Full,"['betou17', 'mbisc17', 'mipos17', 'trhav17']"
+8c,8,c,Data Analysis on Real World Data,0,4,datalogi,8c,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",4,Not open,[]
 8d,8,d,Data Analysis on Real World Data,0,4,datalogi,8d,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",4,Not open,[]
 8e,8,e,Data Analysis on Real World Data,0,4,datalogi,8e,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",4,Not open,[]
 8f,8,f,Data Analysis on Real World Data,0,4,datalogi,8f,IMADA,IMADA,,,35,"[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",4,Not open,[]
-9a,9,a,Parallel Algorithms,0,4,datalogi,9a,IMADA,IMADA,,,39,"[5, 7, 13, 4, 2, 6, 2, 0, 0, 0, 0, 0]",1,Underfull,"['abrue17', 'lucni17', 'thbuh17']"
-9b,9,b,Parallel Algorithms,0,4,datalogi,9b,IMADA,IMADA,,,39,"[5, 7, 13, 4, 2, 6, 2, 0, 0, 0, 0, 0]",2,Underfull,"['bjkja17', 'thsim17']"
-10a,10,a,Graph Transformation,0,4,datalogi,10a,IMADA,IMADA,,,22,"[0, 3, 0, 5, 10, 1, 3, 0, 0, 0, 0, 0]",4,Not open,[]
+9a,9,a,Parallel Algorithms,0,4,datalogi,9a,IMADA,IMADA,,,39,"[5, 7, 13, 4, 2, 6, 2, 0, 0, 0, 0, 0]",1,Underfull,"['abrue17', 'lucni17', 'thsim17']"
+9b,9,b,Parallel Algorithms,0,4,datalogi,9b,IMADA,IMADA,,,39,"[5, 7, 13, 4, 2, 6, 2, 0, 0, 0, 0, 0]",3,Underfull,['bjkja17']
+10a,10,a,Graph Transformation,0,4,datalogi,10a,IMADA,IMADA,,,22,"[0, 3, 0, 5, 10, 1, 3, 0, 0, 0, 0, 0]",1,Underfull,"['anmad17', 'siban17', 'vimix17']"
 10b,10,b,Graph Transformation,0,4,datalogi,10b,IMADA,IMADA,,,22,"[0, 3, 0, 5, 10, 1, 3, 0, 0, 0, 0, 0]",4,Not open,[]
 11a,11,a,K shortest paths in graphs and hypergraphs,0,4,datalogi,11a,IMADA,IMADA,,,39,"[6, 5, 7, 4, 1, 7, 9, 0, 0, 0, 0, 0]",2,Underfull,"['kamik17', 'moell17']"
 11b,11,b,K shortest paths in graphs and hypergraphs,0,4,datalogi,11b,IMADA,IMADA,,,39,"[6, 5, 7, 4, 1, 7, 9, 0, 0, 0, 0, 0]",0,Full,"['jepma17', 'lsoer17', 'mathc17', 'omami17']"
-12a,12,a,Analysis of drone inspection images,0,4,datalogi,12a,IMADA,IMADA,,,25,"[5, 6, 2, 7, 1, 2, 1, 1, 0, 0, 0, 0]",0,Full,"['jscho17', 'krsch17', 'magnj17', 'vabro15']"
-12b,12,b,Analysis of drone inspection images,0,4,datalogi,12b,IMADA,IMADA,,,25,"[5, 6, 2, 7, 1, 2, 1, 1, 0, 0, 0, 0]",3,Underfull,['michh16']
+12a,12,a,Analysis of drone inspection images,0,4,datalogi,12a,IMADA,IMADA,,,25,"[5, 6, 2, 7, 1, 2, 1, 1, 0, 0, 0, 0]",0,Full,"['jaege16', 'krsch17', 'michh16', 'miols17']"
+12b,12,b,Analysis of drone inspection images,0,4,datalogi,12b,IMADA,IMADA,,,25,"[5, 6, 2, 7, 1, 2, 1, 1, 0, 0, 0, 0]",1,Underfull,"['jscho17', 'magnj17', 'vabro15']"

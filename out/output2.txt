@@ -1,11 +1,11 @@
 1a: Exact algorithms for the bounded degree vertex cover problem
 Martin Kristian Lorenzen, marlo17@student.sdu.dk
+Thomas Blow Buhl, thbuh17@student.sdu.dk
 
 3a: Advanced Topics in Compiler Construction
 Alexander Kllund Nissen, alnis17@student.sdu.dk
 Frederik Vogt Bolding, frbol17@student.sdu.dk
 Jacob Vesti Moeslund Nielsen, janie15@student.sdu.dk
-Vilmundur Porsteinsson, vipor16@student.sdu.dk
 
 3b: Advanced Topics in Compiler Construction
 Dennis Andersen, deand17@student.sdu.dk
@@ -14,28 +14,22 @@ Dennis Andersen, deand17@student.sdu.dk
 Phong Anh Tran, phtra14@student.sdu.dk
 
 6a: Machine learning based stratification of cancer subtypes
-Anne Mller Madsen, anmad17@student.sdu.dk
-Mikkel Olsen, miols17@student.sdu.dk
-Sissel Banke, siban17@student.sdu.dk
-Vicki Mixen, vimix17@student.sdu.dk
+Andreas Brandenborg Hallager Thomsen, antho17@student.sdu.dk
+Frederik Sandal Banke, frban17@student.sdu.dk
+Vilmundur Porsteinsson, vipor16@student.sdu.dk
 
 6b: Machine learning based stratification of cancer subtypes
 Andreas Lyngholm Poulsen, andpo17@student.sdu.dk
-Jacob Marcus Egebjerg, jaege16@student.sdu.dk
 Jakob Frydendal Donbk Jensen, jakoj17@student.sdu.dk
 Mikkel Mller Jensen, mikkj17@student.sdu.dk
 
 8a: Data Analysis on Real World Data
-Andreas Brandenborg Hallager Thomsen, antho17@student.sdu.dk
 Eivind Roslyng-Jensen, eiros15@student.sdu.dk
-Frederik Sandal Banke, frban17@student.sdu.dk
+Erik Andersen, erand17@student.sdu.dk
+Iyad Atef Abdel Rahman, iyabd17@student.sdu.dk
 Mads Harloff Lauritsen, madla17@student.sdu.dk
 
 8b: Data Analysis on Real World Data
-Erik Andersen, erand17@student.sdu.dk
-Iyad Atef Abdel Rahman, iyabd17@student.sdu.dk
-
-8c: Data Analysis on Real World Data
 Benjamin Munch Berg Toubl, betou17@student.sdu.dk
 Mathias Lyhne Bischoff, mbisc17@student.sdu.dk
 Mikkel Boger Posselt, mipos17@student.sdu.dk
@@ -44,11 +38,15 @@ Troels Peter Have, trhav17@student.sdu.dk
 9a: Parallel Algorithms
 Anton Bolsing Brel, abrue17@student.sdu.dk
 Lucas Schtt Nielsen, lucni17@student.sdu.dk
-Thomas Blow Buhl, thbuh17@student.sdu.dk
+Thor Alexander Bje Simonsen, thsim17@student.sdu.dk
 
 9b: Parallel Algorithms
 Bjrn Angel Kjr, bjkja17@student.sdu.dk
-Thor Alexander Bje Simonsen, thsim17@student.sdu.dk
+
+10a: Graph Transformation
+Anne Mller Madsen, anmad17@student.sdu.dk
+Sissel Banke, siban17@student.sdu.dk
+Vicki Mixen, vimix17@student.sdu.dk
 
 11a: K shortest paths in graphs and hypergraphs
 Kasper Kirkegaard Mikkelsen, kamik17@student.sdu.dk
@@ -61,11 +59,13 @@ Mathilde Blicher Christensen, mathc17@student.sdu.dk
 Omar Adnan Amin, omami17@student.sdu.dk
 
 12a: Analysis of drone inspection images
-Jakob Schler, jscho17@student.sdu.dk
+Jacob Marcus Egebjerg, jaege16@student.sdu.dk
 Kristian Enemark Schebye, krsch17@student.sdu.dk
-Magnus Kjr Jrgensen, magnj17@student.sdu.dk
-Valentin Alexander Vlkers Hoeck, vabro15@student.sdu.dk
+Michael Hangaard Hansen, michh16@student.sdu.dk
+Mikkel Olsen, miols17@student.sdu.dk
 
 12b: Analysis of drone inspection images
-Michael Hangaard Hansen, michh16@student.sdu.dk
+Jakob Schler, jscho17@student.sdu.dk
+Magnus Kjr Jrgensen, magnj17@student.sdu.dk
+Valentin Alexander Vlkers Hoeck, vabro15@student.sdu.dk
 

@@ -1,18 +1,22 @@
 {
     "10a": {
         "ID": 10,
-        "assigned": [],
+        "assigned": [
+            "anmad17",
+            "siban17",
+            "vimix17"
+        ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 4,
+        "places_available": 1,
         "popularity_details": "[0, 3, 0, 5, 10, 1, 3, 0, 0, 0, 0, 0]",
         "popularity_tot": 22,
         "prj_id": "10a",
         "team": "a",
-        "team_status": "Not open",
+        "team_status": "Underfull",
         "title": "Graph Transformation",
         "type": "datalogi",
         "wl": NaN
@@ -82,10 +86,10 @@
     "12a": {
         "ID": 12,
         "assigned": [
-            "jscho17",
+            "jaege16",
             "krsch17",
-            "magnj17",
-            "vabro15"
+            "michh16",
+            "miols17"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
@@ -105,14 +109,16 @@
     "12b": {
         "ID": 12,
         "assigned": [
-            "michh16"
+            "jscho17",
+            "magnj17",
+            "vabro15"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 3,
+        "places_available": 1,
         "popularity_details": "[5, 6, 2, 7, 1, 2, 1, 1, 0, 0, 0, 0]",
         "popularity_tot": 25,
         "prj_id": "12b",
@@ -125,14 +131,15 @@
     "1a": {
         "ID": 1,
         "assigned": [
-            "marlo17"
+            "marlo17",
+            "thbuh17"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 3,
+        "places_available": 2,
         "popularity_details": "[1, 2, 0, 0, 1, 2, 0, 0, 2, 0, 0, 0]",
         "popularity_tot": 8,
         "prj_id": "1a",
@@ -201,20 +208,19 @@
         "assigned": [
             "alnis17",
             "frbol17",
-            "janie15",
-            "vipor16"
+            "janie15"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 0,
+        "places_available": 1,
         "popularity_details": "[5, 0, 3, 7, 3, 7, 2, 1, 0, 0, 0, 0]",
         "popularity_tot": 28,
         "prj_id": "3a",
         "team": "a",
-        "team_status": "Full",
+        "team_status": "Underfull",
         "title": "Advanced Topics in Compiler Construction",
         "type": "datalogi",
         "wl": NaN
@@ -316,22 +322,21 @@
     "6a": {
         "ID": 6,
         "assigned": [
-            "anmad17",
-            "miols17",
-            "siban17",
-            "vimix17"
+            "antho17",
+            "frban17",
+            "vipor16"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 0,
+        "places_available": 1,
         "popularity_details": "[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",
         "popularity_tot": 38,
         "prj_id": "6a",
         "team": "a",
-        "team_status": "Full",
+        "team_status": "Underfull",
         "title": "Machine learning based stratification of cancer subtypes",
         "type": "datalogi",
         "wl": NaN
@@ -340,7 +345,6 @@
         "ID": 6,
         "assigned": [
             "andpo17",
-            "jaege16",
             "jakoj17",
             "mikkj17"
         ],
@@ -349,12 +353,12 @@
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 0,
+        "places_available": 1,
         "popularity_details": "[10, 12, 6, 3, 4, 0, 1, 1, 1, 0, 0, 0]",
         "popularity_tot": 38,
         "prj_id": "6b",
         "team": "b",
-        "team_status": "Full",
+        "team_status": "Underfull",
         "title": "Machine learning based stratification of cancer subtypes",
         "type": "datalogi",
         "wl": NaN
@@ -398,9 +402,9 @@
     "8a": {
         "ID": 8,
         "assigned": [
-            "antho17",
             "eiros15",
-            "frban17",
+            "erand17",
+            "iyabd17",
             "madla17"
         ],
         "instit": "IMADA",
@@ -421,27 +425,6 @@
     "8b": {
         "ID": 8,
         "assigned": [
-            "erand17",
-            "iyabd17"
-        ],
-        "instit": "IMADA",
-        "institute": "IMADA",
-        "max_cap": 4,
-        "min_cap": 0,
-        "mini": NaN,
-        "places_available": 2,
-        "popularity_details": "[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",
-        "popularity_tot": 35,
-        "prj_id": "8b",
-        "team": "b",
-        "team_status": "Underfull",
-        "title": "Data Analysis on Real World Data",
-        "type": "datalogi",
-        "wl": NaN
-    },
-    "8c": {
-        "ID": 8,
-        "assigned": [
             "betou17",
             "mbisc17",
             "mipos17",
@@ -455,9 +438,27 @@
         "places_available": 0,
         "popularity_details": "[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",
         "popularity_tot": 35,
+        "prj_id": "8b",
+        "team": "b",
+        "team_status": "Full",
+        "title": "Data Analysis on Real World Data",
+        "type": "datalogi",
+        "wl": NaN
+    },
+    "8c": {
+        "ID": 8,
+        "assigned": [],
+        "instit": "IMADA",
+        "institute": "IMADA",
+        "max_cap": 4,
+        "min_cap": 0,
+        "mini": NaN,
+        "places_available": 4,
+        "popularity_details": "[8, 4, 4, 5, 5, 2, 6, 0, 1, 0, 0, 0]",
+        "popularity_tot": 35,
         "prj_id": "8c",
         "team": "c",
-        "team_status": "Full",
+        "team_status": "Not open",
         "title": "Data Analysis on Real World Data",
         "type": "datalogi",
         "wl": NaN
@@ -521,7 +522,7 @@
         "assigned": [
             "abrue17",
             "lucni17",
-            "thbuh17"
+            "thsim17"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
@@ -541,15 +542,14 @@
     "9b": {
         "ID": 9,
         "assigned": [
-            "bjkja17",
-            "thsim17"
+            "bjkja17"
         ],
         "instit": "IMADA",
         "institute": "IMADA",
         "max_cap": 4,
         "min_cap": 0,
         "mini": NaN,
-        "places_available": 2,
+        "places_available": 3,
         "popularity_details": "[5, 7, 13, 4, 2, 6, 2, 0, 0, 0, 0, 0]",
         "popularity_tot": 39,
         "prj_id": "9b",
