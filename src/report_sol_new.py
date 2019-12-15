@@ -192,15 +192,21 @@ def summarize(ass_std2team, ass_team2std, max_p, prob):
     count_teams = 0
     count_prj = 0
 
+    wload_topic = {}
     for i in sorted(prob.topics.keys()):
         prj = 0
+        std_topic = 0
+        teams = 0
         for j in sorted(prob.topics[i]):
             pID = str(int(i))+j
             std_assigned = len(ass_team2std[pID]) if pID in ass_team2std else 0
             if std_assigned > 0:
+                teams += 1
+                std_topic += std_assigned
                 count_teams += 1
                 prj = 1
         count_prj += prj
+        wload_topic[i] = (std_topic, teams)
 
     counter = [0]*max_p
     unprioritized = 0
@@ -226,6 +232,7 @@ def summarize(ass_std2team, ass_team2std, max_p, prob):
         s = s+out+"\n"
 
     print(s)
+    print(wload_topic)
     #f = open(output1, "a")
     # f.write(s)
     # f.close()
