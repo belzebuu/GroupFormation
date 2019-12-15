@@ -94,10 +94,11 @@ def project_table(ass_std2team, ass_team2std, popularity, max_p, prob):
                          )
                 for sID in sorted(ass_team2std[pID]):
                     project_details[pID]["assigned"].append(sID)
-                    f2.write("%s, %s\n" %
-                             (prob.student_details[sID]["full_name"],
+                    f2.write("%s, %s, %s\n" %
+                             (prob.student_details[sID]["email"],
                               # prob.student_details[sID]["Efternavn"],
-                              prob.student_details[sID]["email"]))
+                              prob.student_details[sID]["full_name"],
+                              prob.student_details[sID]["priority_list"]))
                 f2.write("\n")
 
     f2.close()

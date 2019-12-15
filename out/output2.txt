@@ -1,71 +1,71 @@
 1a: Exact algorithms for the bounded degree vertex cover problem
-Martin Kristian Lorenzen, marlo17@student.sdu.dk
-Thomas Blow Buhl, thbuh17@student.sdu.dk
+marlo17@student.sdu.dk, Martin Kristian Lorenzen, [1, 11, 3, 5, 9, 2, 10]
+thbuh17@student.sdu.dk, Thomas Blow Buhl, [9, 1, 2, 6, 10, 7, 11]
 
 3a: Advanced Topics in Compiler Construction
-Alexander Kllund Nissen, alnis17@student.sdu.dk
-Frederik Vogt Bolding, frbol17@student.sdu.dk
-Jacob Vesti Moeslund Nielsen, janie15@student.sdu.dk
+alnis17@student.sdu.dk, Alexander Kllund Nissen, [3, 9, 11, 10, 6, 4, 8]
+frbol17@student.sdu.dk, Frederik Vogt Bolding, [3, 9, 11, 10, 6, 4, 8]
+janie15@student.sdu.dk, Jacob Vesti Moeslund Nielsen, [3, 9, 11, 10, 6, 4, 8]
 
 3b: Advanced Topics in Compiler Construction
-Dennis Andersen, deand17@student.sdu.dk
+deand17@student.sdu.dk, Dennis Andersen, [3, 9, 4, 11, 2, 1, 10, 6, 8]
 
 4a: Implementing choreography extraction
-Phong Anh Tran, phtra14@student.sdu.dk
+phtra14@student.sdu.dk, Phong Anh Tran, [4, 9, 12, 3, 6, 8, 11]
 
 6a: Machine learning based stratification of cancer subtypes
-Andreas Brandenborg Hallager Thomsen, antho17@student.sdu.dk
-Frederik Sandal Banke, frban17@student.sdu.dk
-Vilmundur Porsteinsson, vipor16@student.sdu.dk
+antho17@student.sdu.dk, Andreas Brandenborg Hallager Thomsen, [6, 8, 3, 11, 10, 12, 9, 2, 1, 4, 5, 7]
+frban17@student.sdu.dk, Frederik Sandal Banke, [6, 8, 3, 11, 10, 12, 9, 2, 1, 4, 5, 7]
+vipor16@student.sdu.dk, Vilmundur Porsteinsson, [3, 6, 9, 8, 10, 11, 7]
 
 6b: Machine learning based stratification of cancer subtypes
-Andreas Lyngholm Poulsen, andpo17@student.sdu.dk
-Jakob Frydendal Donbk Jensen, jakoj17@student.sdu.dk
-Mikkel Mller Jensen, mikkj17@student.sdu.dk
+andpo17@student.sdu.dk, Andreas Lyngholm Poulsen, [6, 12, 8, 9, 3, 4, 11]
+jakoj17@student.sdu.dk, Jakob Frydendal Donbk Jensen, [6, 12, 8, 9, 3, 4, 11]
+mikkj17@student.sdu.dk, Mikkel Mller Jensen, [6, 12, 8, 9, 3, 4, 11]
 
 8a: Data Analysis on Real World Data
-Eivind Roslyng-Jensen, eiros15@student.sdu.dk
-Erik Andersen, erand17@student.sdu.dk
-Iyad Atef Abdel Rahman, iyabd17@student.sdu.dk
-Mads Harloff Lauritsen, madla17@student.sdu.dk
+eiros15@student.sdu.dk, Eivind Roslyng-Jensen, [8, 6, 9, 12, 7, 5, 11]
+erand17@student.sdu.dk, Erik Andersen, [8, 6, 12, 7, 10, 11, 3]
+iyabd17@student.sdu.dk, Iyad Atef Abdel Rahman, [8, 12, 6, 11, 9, 5, 10, 3]
+madla17@student.sdu.dk, Mads Harloff Lauritsen, [8, 6, 9, 12, 7, 5, 11]
 
 8b: Data Analysis on Real World Data
-Benjamin Munch Berg Toubl, betou17@student.sdu.dk
-Mathias Lyhne Bischoff, mbisc17@student.sdu.dk
-Mikkel Boger Posselt, mipos17@student.sdu.dk
-Troels Peter Have, trhav17@student.sdu.dk
+betou17@student.sdu.dk, Benjamin Munch Berg Toubl, [8, 6, 9, 12, 4, 11, 5]
+mbisc17@student.sdu.dk, Mathias Lyhne Bischoff, [8, 6, 9, 12, 4, 11, 5]
+mipos17@student.sdu.dk, Mikkel Boger Posselt, [8, 6, 9, 12, 4, 11, 5]
+trhav17@student.sdu.dk, Troels Peter Have, [8, 6, 9, 12, 4, 11, 5]
 
 9a: Parallel Algorithms
-Anton Bolsing Brel, abrue17@student.sdu.dk
-Lucas Schtt Nielsen, lucni17@student.sdu.dk
-Thor Alexander Bje Simonsen, thsim17@student.sdu.dk
+abrue17@student.sdu.dk, Anton Bolsing Brel, [9, 8, 6, 12, 5, 3, 7]
+lucni17@student.sdu.dk, Lucas Schtt Nielsen, [9, 11, 5, 6, 12, 8, 4]
+thsim17@student.sdu.dk, Thor Alexander Bje Simonsen, [9, 1, 2, 3, 8, 10, 11, 12, 6, 5]
 
 9b: Parallel Algorithms
-Bjrn Angel Kjr, bjkja17@student.sdu.dk
+bjkja17@student.sdu.dk, Bjrn Angel Kjr, [9, 4, 11, 3, 10, 5, 12]
 
 10a: Graph Transformation
-Anne Mller Madsen, anmad17@student.sdu.dk
-Sissel Banke, siban17@student.sdu.dk
-Vicki Mixen, vimix17@student.sdu.dk
+anmad17@student.sdu.dk, Anne Mller Madsen, [6, 10, 11, 3, 8, 9, 2]
+siban17@student.sdu.dk, Sissel Banke, [6, 10, 11, 3, 8, 9, 2]
+vimix17@student.sdu.dk, Vicki Mixen, [6, 10, 11, 3, 8, 9, 2]
 
 11a: K shortest paths in graphs and hypergraphs
-Kasper Kirkegaard Mikkelsen, kamik17@student.sdu.dk
-Marcus Mller, moell17@student.sdu.dk
+kamik17@student.sdu.dk, Kasper Kirkegaard Mikkelsen, [11, 9, 6, 10, 2, 1, 5]
+moell17@student.sdu.dk, Marcus Mller, [11, 9, 2, 3, 1, 4, 5]
 
 11b: K shortest paths in graphs and hypergraphs
-Jeppe Madsen, jepma17@student.sdu.dk
-Lasse Kisbye Srensen, lsoer17@student.sdu.dk
-Mathilde Blicher Christensen, mathc17@student.sdu.dk
-Omar Adnan Amin, omami17@student.sdu.dk
+jepma17@student.sdu.dk, Jeppe Madsen, [11, 6, 9, 8, 10, 3, 5]
+lsoer17@student.sdu.dk, Lasse Kisbye Srensen, [11, 6, 9, 8, 10, 3, 5]
+mathc17@student.sdu.dk, Mathilde Blicher Christensen, [11, 6, 9, 8, 10, 3, 5]
+omami17@student.sdu.dk, Omar Adnan Amin, [11, 6, 9, 8, 10, 3, 5]
 
 12a: Analysis of drone inspection images
-Jacob Marcus Egebjerg, jaege16@student.sdu.dk
-Kristian Enemark Schebye, krsch17@student.sdu.dk
-Michael Hangaard Hansen, michh16@student.sdu.dk
-Mikkel Olsen, miols17@student.sdu.dk
+jaege16@student.sdu.dk, Jacob Marcus Egebjerg, [6, 12, 9, 7, 8, 11, 3, 2]
+krsch17@student.sdu.dk, Kristian Enemark Schebye, [12, 5, 9, 10, 4, 2, 6]
+michh16@student.sdu.dk, Michael Hangaard Hansen, [12, 8, 5, 6, 11, 3, 2]
+miols17@student.sdu.dk, Mikkel Olsen, [6, 12, 8, 9, 7, 3, 11]
 
 12b: Analysis of drone inspection images
-Jakob Schler, jscho17@student.sdu.dk
-Magnus Kjr Jrgensen, magnj17@student.sdu.dk
-Valentin Alexander Vlkers Hoeck, vabro15@student.sdu.dk
+jscho17@student.sdu.dk, Jakob Schler, [12, 11, 6, 5, 4, 9, 8]
+magnj17@student.sdu.dk, Magnus Kjr Jrgensen, [12, 11, 6, 5, 4, 9, 8]
+vabro15@student.sdu.dk, Valentin Alexander Vlkers Hoeck, [12, 11, 6, 5, 4, 9, 8]
 
