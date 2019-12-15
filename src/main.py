@@ -45,7 +45,7 @@ def main():
 
     model = "minimax"
 
-    minimax, solutions = model_ip_scip(problem)
+    minimax, solutions = model_ip(problem)
     stat = check_sol(solutions, problem, soldirname="sln")
 
     for st in stat:
