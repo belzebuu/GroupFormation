@@ -58,8 +58,10 @@ def main():
     start = clock()
     model = "minimax_instab_weighted"
     model = model+"-"+options.Wmethod
-    value, solutions = model_ip_weighted(problem, options.Wmethod, True,
-                                         int(minimax), options.allsol)
+    # value, solutions = model_ip_weighted(problem, options.Wmethod, True,
+    #                                     int(minimax), options.allsol)
+    value, solutions = model_ip_weighted(problem, options.Wmethod, False,
+                                         0, options.allsol)
 
     elapsed = (clock() - start)
 

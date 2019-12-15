@@ -9,8 +9,6 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
     start = clock()
     m = Model('weighted')
 
-    restrictions2016 = False
-    Bio2014 = False
     allsolutions = allsol
 
     cal_P = list(prob.projects.keys())
@@ -98,7 +96,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
         tot_instability = 0
         W_instability = 0
     ############################################################
-    if minimax >= 0:
+    if minimax > 0:
         u = {}  # rank assigned per group
         for g in cal_G:
             u[g] = m.addVar(lb=0.0, ub=max_rank, vtype=GRB.INTEGER, obj=0.0, name='u_%s' % (g))
@@ -133,17 +131,6 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
             if not p in prob.std_ranks[prob.groups[g][0]]:
                 for t in range(len(prob.projects[p])):
                     m.addConstr(x[g, p, t] == 0, 'ngrp_%s' % g)
-        if Bio2014:  # 2014: constraint on biology stydents
-            if peek == "biologi":
-                for p in valid_prjs:  # prob.projects.keys():
-                    for t in range(len(prob.projects[p])):
-                        m.addConstr(x[g, p, t] <= b[p, t], 'biologi_%s' % g)
-            else:
-                for p in valid_prjs:  # prob.projects.keys():
-                    for t in range(len(prob.projects[p])):
-                        m.addConstr(x[g, p, t] <= (1 - b[p, t]), 'nbiologi_%s' % g)
-            m.addConstr(x['312', 29, 0] + x['312', 29, 1] == 0, "cheat1")
-            # m.addConstr(quicksum(x[g,61,0] for g in prob.groups.keys())>=1,"cheat2")
 
     # Capacity constraints
     for p in cal_P:
@@ -158,13 +145,6 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
     for rest in prob.restrictions:
         m.addConstr(quicksum(y[p, t] for p in rest["topics"] for t in range(
             len(prob.projects[p]))) <= rest["cum"], "rest_%s" % "-".join(map(str, rest["topics"])))
-
-    ############################################################
-    if restrictions2016:
-        morteza = [y[p, t] for p in ['06', '70'] for t in range(len(prob.projects[p]))]
-        m.addConstr(quicksum(morteza) <= 2, 'morteza_%s' % g)
-        m.addConstr(quicksum(y['04', t]
-                             for t in range(len(prob.projects['04']))) <= 0, 'prj4_%s' % g)
 
     ############################################################
     # Symmetry breaking on the teams
