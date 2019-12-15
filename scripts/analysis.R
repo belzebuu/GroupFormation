@@ -1,6 +1,6 @@
 priorities <- read.csv("../out/output4.csv",header=FALSE,na.strings="NA",dec=".", sep=";")
 priorities <- priorities[,c(1:5,6:(6+11))]
-names(priorities) <- c("Topic ID","Title","Type","Inst","Preferences in total","1st pr.","2nd pr.","3rd pr.","4th pr.",paste(c(5:9),"th pr.",sep=""))
+names(priorities) <- c("Topic ID","Title","Type","Inst","Preferences in total","1st pr.","2nd pr.","3rd pr.","4th pr.",paste(c(5:12),"th pr.",sep=""))
 names <- c("1st pr.","2nd pr.","3rd pr.","4th pr.")
 
 library(dplyr)
