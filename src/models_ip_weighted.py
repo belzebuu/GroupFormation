@@ -186,7 +186,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
         # W_instability = max_rank*len(prob.std_type.keys()) #max_rank*len(prob.groups)*len(prob.groups) ##2^7 * len(prob.groups)*
     ############################################################
     # minimax
-    if minimax >= 0:
+    if minimax > 0:
         for g in cal_G:
             m.addConstr(u[g] ==
                         quicksum(grp_ranks[g][p] * x[g, p, t] for p in list(grp_ranks[g].keys())
