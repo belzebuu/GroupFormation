@@ -84,7 +84,8 @@ def model_ip(prob):
                         prob.projects[p][t][1]*y[p, t], 'ub_%s' % (t))
             m.addConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
                         prob.projects[p][t][0]*y[p, t], 'lb_%s' % (t))
-            m.addConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
+            if config.groups=="pre":
+                m.addConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
     # put in u the rank assigned to the group
     for g in cal_G:
