@@ -59,6 +59,7 @@ the following fields:
 Example:
 
 ```{.example}
+ID;team;title;min_cap;max_cap;type;prj_id;instit;institute;mini;wl
 1;a;Algorithms to identify something from something else;3;5;alle studier, dog ikke farmaci;01a;IMADA;Institut for Matematik og Datalogi;Skriftlig formidling og rapportskrivning (online),Rapportskrivning med LaTeX,Posterfremstilling;IMADA
 1;b;Algorithms to identify something from something else;3;5;alle studier, dog ikke farmaci;01b;IMADA;Institut for Matematik og Datalogi;Skriftlig formidling og rapportskrivning (online),Rapportskrivning med LaTeX,Posterfremstilling;IMADA
 2;;Alternative topic in project topics;3;5;alle studier, dog ikke farmaci;02;BI;Biologisk Institut;Skriftlig formidling og rapportskrivning (online),Naturvidenskabelig informationskompetence,Posterfremstilling;Biologisk Institut
@@ -84,6 +85,7 @@ following fields:
 
 
 ```{.example}
+grp_id;username;type;priority_list;student_id;full_name;email;timestamp
 1;sffd90;biomedicin;9,75,76,65,44,39,41;XXXXXXXXXX;Mario Rossi;mario.rossi@student.org;2018-03-03 09:14:11
 2;sffe90;biomedicin;82,68,22,46,65,90,75,30,8,76,51;YYYYYYYYYY;Sabrina Rossi;sabrina.rossi@student.org;2018-03-03 10:54:50
 3;...

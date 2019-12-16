@@ -5,11 +5,29 @@ from gurobipy import *
 from owa import *
 
 
-def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
+def calculate_weights(weight_method, max_rank):
+    weights = [0] * (max_rank + 1)
+    if weight_method == "identity":
+        weights = list(range(max_rank + 1))
+        weights[0] = max_rank + 1
+    elif weight_method == "owa":
+        weights = owa_weights(max_rank)
+        # beta=1-0.001 #1.0/max_rank - 0.001
+        # f_i = [1 for x in range(1,max_rank+1)] #[1./max_rank*x for x in range(1,max_rank+1)]
+        # rescale=1000
+        # weights[1] = rescale*f_i[0]*beta**(max_rank-1)/(1+beta)**(max_rank-1)
+        # weights[2:] = map(lambda x: rescale*f_i[x-1]*beta**(max_rank-x)/(1+beta)**(max_rank+1-x), range(2,max_rank+1))
+        # weights[0] = max(weights[1:])+1
+    elif weight_method == "powers":
+        weights[1:] = [-2 ** max(8 - x, 0) for x in range(1, max_rank + 1)]
+        weights[0] = -1
+    return weights
+
+def model_ip_weighted(prob, config, minimax):
     start = clock()
     m = Model('weighted')
 
-    allsolutions = allsol
+    # weight_method, instability, minimax, allsol
 
     cal_P = list(prob.projects.keys())
     cal_G = list(prob.groups.keys())
@@ -26,21 +44,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
     for g in cal_G:
         a[g] = len(prob.groups[g])
     ############################################################
-    weights = [0] * (max_rank + 1)
-    if weight_method == "identity":
-        weights = list(range(max_rank + 1))
-        weights[0] = max_rank + 1
-    elif weight_method == "owa":
-        weights = owa_weights(max_rank)
-        # beta=1-0.001 #1.0/max_rank - 0.001
-        # f_i = [1 for x in range(1,max_rank+1)] #[1./max_rank*x for x in range(1,max_rank+1)]
-        # rescale=1000
-        # weights[1] = rescale*f_i[0]*beta**(max_rank-1)/(1+beta)**(max_rank-1)
-        # weights[2:] = map(lambda x: rescale*f_i[x-1]*beta**(max_rank-x)/(1+beta)**(max_rank+1-x), range(2,max_rank+1))
-        # weights[0] = max(weights[1:])+1
-    elif weight_method == "powers":
-        weights[1:] = [-2 ** max(8 - x, 0) for x in range(1, max_rank + 1)]
-        weights[0] = -1
+    weights = calculate_weights(config.Wmethod, max_rank)
     ############################################################
     # Create variables
     x = {}  # # assignment vars
@@ -72,7 +76,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
                  ub=len(list(prob.std_type.keys())) * max_rank, vtype=GRB.CONTINUOUS, obj=1.0, name='v')
 
     ############################################################
-    if instability == True:
+    if config.instability == True:
         z = {}  # z: binary variable to indicate whether there is space left in a team
         q = {}  # d: counts if space free in some better project
         for p in cal_P:
@@ -161,7 +165,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
 
     ############################################################
     # instability
-    if instability == True:
+    if config.instability == True:
         for p in cal_P:
             for t in range(len(prob.projects[p])):
                 for g in list(prob.groups.keys()):
@@ -244,7 +248,7 @@ def model_ip_weighted(prob, weight_method, instability, minimax, allsol):
         print("solution " + str(i) + " found\n")
         elapsed = (clock() - start)
         solutions.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
-        if m.status != GRB.status.OPTIMAL or not allsolutions or elapsed >= 3600:
+        if m.status != GRB.status.OPTIMAL or not config.allsol or elapsed >= 3600:
             break
         m.addConstr(expr, GRB.GREATER_EQUAL, 1.0, "no_good" + str(i))
         m.update()

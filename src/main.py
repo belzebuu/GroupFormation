@@ -29,8 +29,7 @@ def main():
     parser = OptionParser(usage)
     parser.add_option("-a", "--allsol", action="store_true", dest="allsol", default=False,
                       help="All solutions")
-    # parser.add_option("-r", "--rearrange", action="store_true", dest="rearrange_flag", default=False,
-    #                  help="Rearrange")
+    parser.add_option("-i", "--instability", action="store_false", dest="instability", default=True, help="Whether the constraint on instability should be included or not [default: %default]")
     parser.add_option("-w", "--Wmethod", dest="Wmethod", type="string", default="owa", metavar="[identity|owa|powers]",
                       help="The weighting scheme, eg, \"owa\". [default: %default]")
     # parser.add_option("-n","--number", dest="number", type="int", default=10, metavar="NUMBER",
@@ -58,10 +57,7 @@ def main():
     start = clock()
     model = "minimax_instab_weighted"
     model = model+"-"+options.Wmethod
-    # value, solutions = model_ip_weighted(problem, options.Wmethod, True,
-    #                                     int(minimax), options.allsol)
-    value, solutions = model_ip_weighted(problem, options.Wmethod, False,
-                                         int(minimax), options.allsol)
+    value, solutions = model_ip_weighted(problem, options, minimax)
 
     elapsed = (clock() - start)
 
