@@ -30,6 +30,7 @@ def main():
     parser.add_option("-a", "--allsol", action="store_true", dest="allsol", default=False,
                       help="All solutions")
     parser.add_option("-i", "--instability", action="store_false", dest="instability", default=True, help="Whether the constraint on instability should be included or not [default: %default]")
+    parser.add_option("-g", "--groups", dest="groups", type="string", default="post", metavar="[pre|post]", help="Whether groups are formed pre or post [default: %default]")
     parser.add_option("-w", "--Wmethod", dest="Wmethod", type="string", default="owa", metavar="[identity|owa|powers]",
                       help="The weighting scheme, eg, \"owa\". [default: %default]")
     # parser.add_option("-n","--number", dest="number", type="int", default=10, metavar="NUMBER",

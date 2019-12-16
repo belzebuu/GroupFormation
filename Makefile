@@ -14,5 +14,5 @@ psy:
 
 
 2019-bachelor:
-	${PROGRAM} src/main.py data/2019-bachelor
+	${PROGRAM} src/main.py -i -g pre data/2019-bachelor
 	${PROGRAM} src/report_sol_new.py -d data/2019-bachelor -s sln/sol_001.txt
