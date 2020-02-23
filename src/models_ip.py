@@ -5,7 +5,7 @@ from gurobipy import *
 from functools import reduce
 
 
-def model_ip(prob):
+def model_ip(prob, config):
     start = clock()
     m = Model('leximin')
 
