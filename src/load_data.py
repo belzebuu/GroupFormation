@@ -7,6 +7,7 @@ import csv
 import json
 import codecs
 import pandas as pd
+import random
 from collections import defaultdict
 from collections import OrderedDict
 from collections import namedtuple
@@ -16,10 +17,10 @@ class Problem:
     def __init__(self, dirname):
         self.study_programs = set()
         self.project_details, self.topics, self.projects = self.read_projects(dirname)
-        self.student_details, self.priorities, self.groups, self.std_type = self.read_students(
+        self.student_details, self.student_dtypes, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
         self.check_tot_capacity()
-        self.std_values, self.std_ranks = self.calculate_ranks_values()
+        self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
 
         # self.minimax_sol = self.minimax_sol(dirname),
         self.valid_prjtype = self.type_compliance(dirname)
@@ -96,18 +97,32 @@ class Problem:
 
     def read_students(self, dirname):
         students_file = dirname+"/students.csv"
+        dtypes_file = dirname+"/dtypes.csv"
         print("read ", students_file)
 
+        student_dtypes = {'grp_id': 'str', 'group': 'str',
+                          'full_name': 'str', 'priority_list': 'str'}
+        try:
+            with open(dtypes_file) as f:
+                for x in f:
+                    row = x.split(";")
+                    student_dtypes[row[0]] = row[1].strip()
+        except FileNotFoundError:
+            print("No dtypes given")
+
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
-        student_table = pd.read_csv(dirname+"/students.csv", sep=";")
+        student_table = pd.read_csv(dirname+"/students.csv", sep=";",
+                                    dtype=student_dtypes, keep_default_na=False, decimal=',')
         student_table["username"].apply(lambda x: x.lower())
+        # print(student_table)
+        print(student_table.dtypes)
         student_table.index = student_table["username"]
         student_details = student_table.to_dict("index", into=OrderedDict)
 
         for s in student_details:
-            student_details[s]["priority_list"] = [
-                int(x.strip()) for x in student_details[s]["priority_list"].split(",")]
-
+            student_details[s]["priority_list"] = [list(map(int, x.strip().split(" "))) for x in student_details[s]["priority_list"].split(
+                ",")] if student_details[s]["priority_list"] is not '' else []
+        # print(student_details)
         #reader = csv.reader(open(students_file, "r", encoding="utf8"), delimiter=";")
 
         # student_details = {}
@@ -145,7 +160,7 @@ class Problem:
         print(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
 
-        return (student_details, priorities, groups, std_type)
+        return (student_details, student_dtypes, priorities, groups, std_type)
 
     def calculate_ranks_values(self, prioritize_all=False):
         std_values = {}
@@ -160,28 +175,25 @@ class Problem:
             values = {}
             ranks = {}
             # print priorities;
-            for p in priorities:
-                if p not in self.topics:
-                    print("WARNING:" + u + " expressed a preference for a project " +
-                          str(p)+" which is not available")
-                    answer = input(
-                        "Continue? (y/n)\n")
-                    if answer not in ['', 'Y', 'y']:
-                        sys.exit("You decided to stop")
-                    else:  # we increse the priorities anyway.
-                        j += 1
-                        if i > 0:
-                            i = i-1
-                        continue
-                values[p] = 2**i
-                ranks[p] = j
+            for ties in priorities:
+                print(priorities)
+                for p in ties:
+                    if p not in self.topics:
+                        print("ERROR:" + u + " expressed a preference for a project " +
+                              str(p)+" which is not available")
+                        # answer = input("Continue? (y/n)\n")
+                        # if answer not in ['', 'Y', 'y']:
+                        # sys.exit("You decided to stop")
+                        raise SystemExit
+                    values[p] = 2**i
+                    ranks[p] = j
                 j += 1
                 if i > 0:
                     i = i-1
 
             # if we need to ensure feasibility we can insert a low priority for all other projects
             if prioritize_all:
-                prj_set = set(self.project_details.keys()) - set(priorities)
+                prj_set = set(self.topics) - {x for xx in priorities for x in xx}
                 prj_set = list(prj_set)
                 prj_list = random.sample(prj_set, k=len(prj_set))
                 for p in prj_list:
