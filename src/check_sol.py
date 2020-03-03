@@ -20,7 +20,7 @@ def check_sol(sol, problem, sol_id, soldirname=""):
     unass_students = 0
     members = {}
 
-    print(problem.projects)
+    #    print(problem.projects)
     projects = defaultdict(list)
     for s in sol.topics:
         projects[(sol.topics[s], sol.teams[s])].append(s)
