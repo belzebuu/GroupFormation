@@ -177,6 +177,7 @@ def model_ip_ext(prob, config):
 
                 m.addConstr(intra_discrepancy_min[p, t] <=
                             D_s1s2[g1, g2, p, t]+100*(1-alpha[g1, g2, p, t]), "intra_min_%s_%s" % (p, t))
+
             m.addConstr(inter_discrepancy[p, t] >= intra_discrepancy_min[p,
                                                                          t]-intra_discrepancy_min_global, "inter_%s_%s" % (p, t))
             m.addConstr(intra_discrepancy_min_global <=
