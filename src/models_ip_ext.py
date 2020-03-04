@@ -81,8 +81,8 @@ def model_ip_ext(prob, config):
                                                 vtype=GRB.BINARY,
                                                 obj=0.0,
                                                 name='delta_%s_%s_%s_%s' % (p, t, f, ell))
-                delta_sum[p, t, f] = m.addVar(lb=0.0, ub=1.0,
-                                                vtype=GRB.BINARY,
+                delta_sum[p, t, f] = m.addVar(lb=0.0, #ub=1.0,
+                                                vtype=GRB.CONTINUOUS,
                                                 obj=0.0,
                                                 name='delta_sum_%s_%s_%s' % (p, t, f))
     delta_min={}
