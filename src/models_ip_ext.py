@@ -19,6 +19,13 @@ def model_ip_ext(prob, config):
         elif type not in ['object', 'str']:
             F_num.add(feat)
 
+    #  create sets of students for each category of each categorical variable
+    stds = {}
+    for f in F_cat:
+        for ell in prob.categories[f+"_num"]:
+            stds[f,ell]={s for s in prob.student_details if prob.student_details[s][f+"_num"]==ell}
+
+
     # grp_ranks = {}
     # max_rank = 0
     cal_G = list(prob.groups.keys())
@@ -63,6 +70,32 @@ def model_ip_ext(prob, config):
     #              vtype=GRB.INTEGER,
     #              obj=1.0,
     #              name='v_%s' % (g))
+
+    delta_sum = {}
+    delta = {} # var to store if category ell of feature f is used in (p,t)
+    for p in cal_P:
+        for t in range(len(prob.projects[p])):
+            for f in F_cat:
+                for ell in prob.categories[f+"_num"]:                  
+                    delta[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
+                                                vtype=GRB.BINARY,
+                                                obj=0.0,
+                                                name='delta_%s_%s_%s_%s' % (p, t, f, ell))
+                delta_sum[p, t, f] = m.addVar(lb=0.0, ub=1.0,
+                                                vtype=GRB.BINARY,
+                                                obj=0.0,
+                                                name='delta_sum_%s_%s_%s' % (p, t, f))
+    delta_min={}
+    delta_max={}
+    for f in F_cat:
+        delta_min[f] = m.addVar(lb=0.0, # ub=1.0,
+                                vtype=GRB.CONTINUOUS,
+                                obj=0.0,
+                                name='delta_min_%s' % (f))
+        delta_max[f] = m.addVar(lb=0.0, # ub=1.0,
+                                vtype=GRB.CONTINUOUS,
+                                obj=0.0,
+                                name='delta_max_%s' % (f))
 
     alpha = {}
     for (g1, g2) in itertools.combinations(cal_G, 2):
@@ -161,6 +194,17 @@ def model_ip_ext(prob, config):
                         >= quicksum(x[g, p, t+1] for g in cal_G))
 
     #### DISCREPANCIES ########################################################
+    for p in cal_P:
+        for t in range(len(prob.projects[p])):
+            for f in F_cat:
+                for ell in prob.categories[f+"_num"]:
+                    for s in prob.student_details:
+                        g=prob.student_details[s]["grp_id"]
+                        m.addConstr(x[g, p, t] <= delta[p, t, f, ell], "delta")
+                    m.addConstr(quicksum(x[g, p, t] for g in cal_G) >= delta[p, t, f, ell], "delta")
+                m.addConstr(delta_sum[p,t,f]>=quicksum(delta[p, t, f, ell] for ell in prob.categories[f+"_num"]),"delta_sum")
+                m.addConstr( delta_min[f] <=  delta_sum[p,t,f] )
+                m.addConstr( delta_max[f] >=  delta_sum[p,t,f] )
 
     for p in cal_P:
         for t in range(len(prob.projects[p])):
@@ -185,8 +229,14 @@ def model_ip_ext(prob, config):
     # Compute optimal solution
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)
     m.ModelSense = GRB.MAXIMIZE
-    m.setObjectiveN(intra_discrepancy_min_global, index=0, priority=2, weight=1)
-    m.setObjectiveN(inter_discrepancy_max_global, index=1, priority=1, weight=-1)
+    m.setObjectiveN(intra_discrepancy_min_global, index=0, priority=20, weight=1)
+    m.setObjectiveN(inter_discrepancy_max_global, index=1, priority=10, weight=-1)
+
+    i=2*len(F_cat)
+    for f in F_cat:
+        m.setObjectiveN(delta_min[f], index=i, priority=i, weight=1)
+        m.setObjectiveN(delta_max[f], index=i-1, priority=i-1, weight=-1)
+        i=i-2
 
     # m.setParam("Presolve", 0)
     m.write("model_ip_ext.lp")

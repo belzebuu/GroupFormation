@@ -17,7 +17,7 @@ class Problem:
     def __init__(self, dirname):
         self.study_programs = set()
         self.project_details, self.topics, self.projects = self.read_projects(dirname)
-        self.student_details, self.student_dtypes, self.priorities, self.groups, self.std_type = self.read_students(
+        self.student_details, self.student_dtypes, self.categories, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
         self.check_tot_capacity()
         self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
@@ -118,13 +118,16 @@ class Problem:
 
         #print(student_table.dtypes)
         # Transform the categorical values in integers
+        categories={}
         for f in student_table.columns:
             if student_table[f].dtype.name == 'category':
                 print(student_table[f].cat.categories,len(student_table[f].cat.categories))
                 student_table[f+"_num"] = student_table[f].cat.rename_categories(range(len(student_table[f].cat.categories)))
+                categories[f+"_num"]={x:i for (i,x) in enumerate(student_table[f].cat.categories)}
+
         #print(student_table.dtypes)
         #print(student_table.iloc[:,range(9,27)])
-        
+
         student_table.index = student_table["username"]
         student_details = student_table.to_dict("index", into=OrderedDict)
 
@@ -169,7 +172,7 @@ class Problem:
         print(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
 
-        return (student_details, student_dtypes, priorities, groups, std_type)
+        return (student_details, student_dtypes, categories, priorities, groups, std_type)
 
     def calculate_ranks_values(self, prioritize_all=False):
         std_values = {}
