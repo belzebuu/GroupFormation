@@ -13,10 +13,10 @@ __email__ = "marco@imada.sdu.dk"
 __status__ = "Prototype"
 
 
-import sys;
-import getopt;
-import os;
-import string;
+import sys
+import getopt
+import os
+import string
 from subprocess import *
 import random
 
@@ -25,7 +25,7 @@ import random
 
 ## Configuration
 # anonymize=True;
-anonymize=False;
+anonymize=False
 random.seed(2018)
 
 

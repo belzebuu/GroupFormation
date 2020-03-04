@@ -115,7 +115,16 @@ class Problem:
                                     dtype=student_dtypes, keep_default_na=False, decimal=',')
         student_table["username"].apply(lambda x: x.lower())
         # print(student_table)
-        print(student_table.dtypes)
+
+        #print(student_table.dtypes)
+        # Transform the categorical values in integers
+        for f in student_table.columns:
+            if student_table[f].dtype.name == 'category':
+                print(student_table[f].cat.categories,len(student_table[f].cat.categories))
+                student_table[f+"_num"] = student_table[f].cat.rename_categories(range(len(student_table[f].cat.categories)))
+        #print(student_table.dtypes)
+        #print(student_table.iloc[:,range(9,27)])
+        
         student_table.index = student_table["username"]
         student_details = student_table.to_dict("index", into=OrderedDict)
 

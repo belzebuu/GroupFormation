@@ -147,26 +147,32 @@ def check_sol(sol, problem, sol_id, soldirname=""):
         elif type not in ['object', 'str']:
             F_num.add(feat)
 
+
     discrepancy_av = np.empty(len(projects))
     discrepancy_min = np.empty(len(projects))
+    discrepancy_max = np.empty(len(projects))
     i = 0
     for p in projects:
-        M = np.empty((len(projects[p]), len(F_num)))
+        M_num = np.empty((len(projects[p]), len(F_num)))
+        M_cat = np.empty((len(projects[p]), len(F_cat)),dtype=np.uintc)
         for j in range(len(projects[p])):
             s = projects[p][j]
             # print([problem.student_details[s][f] for f in F_num])
-            M[j, :] = np.array([problem.student_details[s][f] for f in F_num])
-        print(M)
-        Dss = [np.linalg.norm(M[u, :]-M[v, :], 1)
+            M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
+            M_cat[j, :] = np.array([problem.student_details[s][f+"_num"] for f in F_cat])
+        print("The features for project {}".format(p))
+        print(np.hstack([M_num,M_cat]))
+        Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
                for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
-        print(Dss)
+        print("The norm L_1 of the pairwise discrepancies:",Dss)
         discrepancy_min[i] = np.min(Dss)
+        discrepancy_max[i] = np.max(Dss)
         discrepancy_av[i] = np.average(Dss)
         i += 1
-    print(discrepancy_min, discrepancy_av)
+    print("The range and averages: ",discrepancy_min, discrepancy_max, discrepancy_av)
     print("Intra: min: {0:.3f} average: {1:.3f}".format(
-        min(discrepancy_min), np.average(discrepancy_av)))
-    print("Inter: min: {0:.3f} average: {1:.3f}".format(np.max(np.absolute(discrepancy_min-np.min(discrepancy_min))),
+        min(discrepancy_min), np.average(discrepancy_av),np.max(discrepancy_max)))
+    print("Inter accumulated: min: {0:.3f} average: {1:.3f}".format(np.max(np.absolute(discrepancy_min-np.min(discrepancy_min))),
                                                         np.sum(np.absolute(discrepancy_av-np.average(discrepancy_av)))))
     raise SystemExit
     ############################################################
