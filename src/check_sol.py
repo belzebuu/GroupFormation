@@ -2,6 +2,7 @@ import sys
 from collections import defaultdict
 import numpy as np
 import itertools
+import pandas as pd
 
 
 def check_all_sols(solutions, problem, soldirname=""):
@@ -139,42 +140,53 @@ def check_sol(sol, problem, sol_id, soldirname=""):
 # 			tot_env1y += max_envy*len(problem.groups[g])
 # 		assert (tot_envy1==tot_envy)
     ############################################################
-    F_cat = set()
-    F_num = set()
-    for (feat, type) in problem.student_dtypes.items():
-        if type == 'category':
-            F_cat.add(feat)
-        elif type not in ['object', 'str']:
-            F_num.add(feat)
-
-
-    discrepancy_av = np.empty(len(projects))
-    discrepancy_min = np.empty(len(projects))
-    discrepancy_max = np.empty(len(projects))
+    F_cat, F_num = problem.separate_features()
+    nfeats = len(problem.features_orddict)
+    order_cols = [x['Variable'] for i, x in problem.features_orddict.items()]
+    discrepancy_av = np.empty([len(projects), nfeats])
+    discrepancy_min = np.empty([len(projects), nfeats])
+    discrepancy_max = np.empty([len(projects), nfeats])
     i = 0
     for p in projects:
         M_num = np.empty((len(projects[p]), len(F_num)))
-        M_cat = np.empty((len(projects[p]), len(F_cat)),dtype=np.uintc)
+        M_cat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
         for j in range(len(projects[p])):
             s = projects[p][j]
             # print([problem.student_details[s][f] for f in F_num])
             M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
             M_cat[j, :] = np.array([problem.student_details[s][f+"_num"] for f in F_cat])
         print("The features for project {}".format(p))
-        print(np.hstack([M_num,M_cat]))
-        Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
-               for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
-        print("The norm L_1 of the pairwise discrepancies:",Dss)
-        discrepancy_min[i] = np.min(Dss)
-        discrepancy_max[i] = np.max(Dss)
-        discrepancy_av[i] = np.average(Dss)
+        feat_grp = np.hstack([M_num, M_cat])
+        feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(
+            len(projects[p]))), columns=F_num+F_cat)
+        print(feat_grp_df[order_cols])
+
+        # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
+        #      for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
+        # print("The norm L_1 of the pairwise discrepancies:",Dss)
+        pairwise = np.vstack([np.absolute(M_num[u, :]-M_num[v, :])
+                              for (u, v) in itertools.combinations(range(len(projects[p])), 2)])
+        counts = np.apply_along_axis(lambda a: len(np.unique(a)), 0, M_cat)
+        discrepancy_min[i, :] = np.hstack([np.min(pairwise, axis=0), counts])
+        discrepancy_av[i, :] = np.hstack([np.average(pairwise, axis=0), counts])
+        discrepancy_max[i, :] = np.hstack([np.max(pairwise, axis=0), counts])
         i += 1
-    print("The range and averages: ",discrepancy_min, discrepancy_max, discrepancy_av)
-    print("Intra: min: {0:.3f} average: {1:.3f}".format(
-        min(discrepancy_min), np.average(discrepancy_av),np.max(discrepancy_max)))
-    print("Inter accumulated: min: {0:.3f} average: {1:.3f}".format(np.max(np.absolute(discrepancy_min-np.min(discrepancy_min))),
-                                                        np.sum(np.absolute(discrepancy_av-np.average(discrepancy_av)))))
-    raise SystemExit
+
+    # print("The range: ", discrepancy_min,  discrepancy_max, sep="\n")
+    summary = np.vstack([np.min(discrepancy_min, axis=0),
+                         # np.average(discrepancy_av,axis=0),
+                         np.max(discrepancy_max, axis=0)])
+
+    sum_df = pd.DataFrame(data=summary, index=["min", "max"], columns=F_num+F_cat)
+    print(sum_df[order_cols])
+    # print("Intra: ", np.min(discrepancy_min, axis=0),
+    #      #
+    #      np.max(discrepancy_max, axis=0), sep="\n")
+    # print("Inter accumulated: min: {0:.3f} average: {1:.3f}".format(np.max(np.absolute(discrepancy_min-np.min(discrepancy_min))),
+    #                                                    np.sum(np.absolute(discrepancy_av-np.average(discrepancy_av)))))
+    # print("Intra : min: {0:.3f} max: {1:.3f}".format(np.max(np.absolute(discrepancy_min-np.min(discrepancy_min))),
+    #                                                    np.sum(np.absolute(discrepancy_av-np.average(discrepancy_av)))))
+    # raise SystemExit
     ############################################################
     # if it passed all previous tests then solution is feasible
     print("feasible solution")

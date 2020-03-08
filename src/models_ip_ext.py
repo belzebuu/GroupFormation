@@ -10,21 +10,14 @@ def model_ip_ext(prob, config):
     start = clock()
     m = Model('leximin')
 
-    F_cat = set()
-    F_num = set()
-    for (feat, type) in prob.student_dtypes.items():
-        print(feat, type)
-        if type == 'category':
-            F_cat.add(feat)
-        elif type not in ['object', 'str']:
-            F_num.add(feat)
+    F_cat, F_num = prob.separate_features()
 
     #  create sets of students for each category of each categorical variable
     stds = {}
     for f in F_cat:
         for ell in prob.categories[f+"_num"]:
-            stds[f,ell]={s for s in prob.student_details if prob.student_details[s][f+"_num"]==ell}
-
+            stds[f, ell] = {
+                s for s in prob.student_details if prob.student_details[s][f+"_num"] == ell}
 
     # grp_ranks = {}
     # max_rank = 0
@@ -71,31 +64,31 @@ def model_ip_ext(prob, config):
     #              obj=1.0,
     #              name='v_%s' % (g))
 
-    delta_sum = {}
-    delta = {} # var to store if category ell of feature f is used in (p,t)
+    delta_cat_sum = {}
+    delta_cat = {}  # var to store if category ell of feature f is used in (p,t)
     for p in cal_P:
         for t in range(len(prob.projects[p])):
             for f in F_cat:
-                for ell in prob.categories[f+"_num"]:                  
-                    delta[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
-                                                vtype=GRB.BINARY,
-                                                obj=0.0,
-                                                name='delta_%s_%s_%s_%s' % (p, t, f, ell))
-                delta_sum[p, t, f] = m.addVar(lb=0.0, #ub=1.0,
-                                                vtype=GRB.CONTINUOUS,
-                                                obj=0.0,
-                                                name='delta_sum_%s_%s_%s' % (p, t, f))
-    delta_min={}
-    delta_max={}
+                for ell in prob.categories[f+"_num"]:
+                    delta_cat[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
+                                                       vtype=GRB.BINARY,
+                                                       obj=0.0,
+                                                       name='delta_cat_%s_%s_%s_%s' % (p, t, f, ell))
+                delta_cat_sum[p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
+                                                  vtype=GRB.CONTINUOUS,
+                                                  obj=0.0,
+                                                  name='delta_cat_sum_%s_%s_%s' % (p, t, f))
+    delta_cat_min = {}
+    delta_cat_max = {}
     for f in F_cat:
-        delta_min[f] = m.addVar(lb=0.0, # ub=1.0,
-                                vtype=GRB.CONTINUOUS,
-                                obj=0.0,
-                                name='delta_min_%s' % (f))
-        delta_max[f] = m.addVar(lb=0.0, # ub=1.0,
-                                vtype=GRB.CONTINUOUS,
-                                obj=0.0,
-                                name='delta_max_%s' % (f))
+        delta_cat_min[f] = m.addVar(lb=0.0,  # ub=1.0,
+                                    vtype=GRB.CONTINUOUS,
+                                    obj=0.0,
+                                    name='delta_cat_min_%s' % (f))
+        delta_cat_max[f] = m.addVar(lb=0.0,  # ub=1.0,
+                                    vtype=GRB.CONTINUOUS,
+                                    obj=0.0,
+                                    name='delta_cat_max_%s' % (f))
 
     alpha = {}
     for (g1, g2) in itertools.combinations(cal_G, 2):
@@ -105,42 +98,53 @@ def model_ip_ext(prob, config):
                                                vtype=GRB.BINARY,
                                                obj=0.0,
                                                name='alpha_%s_%s_%s_%s' % (g1, g2, p, t))
-
-    beta = {}
-    D_s1s2 = {}
-    for (g1, g2) in itertools.combinations(cal_G, 2):
-        for p in cal_P:
-            for t in range(len(prob.projects[p])):
-                D_s1s2[g1, g2, p, t] = m.addVar(lb=0.0,  # ub=1.0,
-                                                vtype=GRB.CONTINUOUS,
-                                                obj=0.0,
-                                                name='D_s1s2_%s_%s_%s_%s' % (g1, g2, p, t))
-                for f in F_num:
-                    beta[g1, g2, p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
-                                                     vtype=GRB.CONTINUOUS,
-                                                     obj=0.0,
-                                                     name='beta_%s_%s_%s_%s_%s' % (g1, g2, p, t, f))
-
     intra_discrepancy_min = {}
-    inter_discrepancy = {}
-    for p in cal_P:
-        for t in range(len(prob.projects[p])):
-            intra_discrepancy_min[p, t] = m.addVar(lb=0.0,  # ub=1.0,
-                                                   vtype=GRB.CONTINUOUS,
-                                                   obj=1.0,
-                                                   name='intra_discrepancy_min_%s_%s' % (p, t))
-            inter_discrepancy[p, t] = m.addVar(lb=0.0,  # ub=1.0,
-                                               vtype=GRB.CONTINUOUS,
-                                               obj=1.0,
-                                               name='inter_discrepancy_%s_%s' % (p, t))
-    intra_discrepancy_min_global = m.addVar(lb=0.0,  # ub=1.0,
+    intra_discrepancy_max = {}
+    for f in F_num:
+        intra_discrepancy_min[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
-                                            obj=1.0,
-                                            name='intra_discrepancy_min_global')
-    inter_discrepancy_max_global = m.addVar(lb=0.0,  # ub=1.0,
+                                            obj=0.0,
+                                            name='intra_discrepancy_min_%s_%s' % (p, t))
+        intra_discrepancy_max[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
-                                            obj=1.0,
-                                            name='inter_discrepancy_max_global')
+                                            obj=0.0,
+                                            name='intra_discrepancy_min_%s_%s' % (p, t))
+
+    # beta = {}
+    # D_s1s2 = {}
+    # for (g1, g2) in itertools.combinations(cal_G, 2):
+    #     for p in cal_P:
+    #         for t in range(len(prob.projects[p])):
+    #             D_s1s2[g1, g2, p, t] = m.addVar(lb=0.0,  # ub=1.0,
+    #                                             vtype=GRB.CONTINUOUS,
+    #                                             obj=0.0,
+    #                                             name='D_s1s2_%s_%s_%s_%s' % (g1, g2, p, t))
+    #             for f in F_num:
+    #                 beta[g1, g2, p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
+    #                                                  vtype=GRB.CONTINUOUS,
+    #                                                  obj=0.0,
+    #                                                  name='beta_%s_%s_%s_%s_%s' % (g1, g2, p, t, f))
+
+    # intra_discrepancy_min = {}
+    # inter_discrepancy_max = {}
+    # for p in cal_P:
+    #     for t in range(len(prob.projects[p])):
+    #         intra_discrepancy_min[p, t] = m.addVar(lb=0.0,  # ub=1.0,
+    #                                                vtype=GRB.CONTINUOUS,
+    #                                                obj=0.0,
+    #                                                name='intra_discrepancy_min_%s_%s' % (p, t))
+    #         inter_discrepancy[p, t] = m.addVar(lb=0.0,  # ub=1.0,
+    #                                            vtype=GRB.CONTINUOUS,
+    #                                            obj=0.0,
+    #                                            name='inter_discrepancy_%s_%s' % (p, t))
+    # intra_discrepancy_min_global = m.addVar(lb=0.0,  # ub=1.0,
+    #                                         vtype=GRB.CONTINUOUS,
+    #                                         obj=0.0,
+    #                                         name='intra_discrepancy_min_global')
+    # inter_discrepancy_max_global = m.addVar(lb=0.0,  # ub=1.0,
+    #                                         vtype=GRB.CONTINUOUS,
+    #                                         obj=0.0,
+    #                                         name='inter_discrepancy_max_global')
     m.update()
     ############################################################
     # Assignment constraints
@@ -194,17 +198,21 @@ def model_ip_ext(prob, config):
                         >= quicksum(x[g, p, t+1] for g in cal_G))
 
     #### DISCREPANCIES ########################################################
-    for p in cal_P:
-        for t in range(len(prob.projects[p])):
-            for f in F_cat:
+    for f in F_cat:
+        for p in cal_P:
+            for t in range(len(prob.projects[p])):
                 for ell in prob.categories[f+"_num"]:
-                    for s in prob.student_details:
-                        g=prob.student_details[s]["grp_id"]
-                        m.addConstr(x[g, p, t] <= delta[p, t, f, ell], "delta")
-                    m.addConstr(quicksum(x[g, p, t] for g in cal_G) >= delta[p, t, f, ell], "delta")
-                m.addConstr(delta_sum[p,t,f]>=quicksum(delta[p, t, f, ell] for ell in prob.categories[f+"_num"]),"delta_sum")
-                m.addConstr( delta_min[f] <=  delta_sum[p,t,f] )
-                m.addConstr( delta_max[f] >=  delta_sum[p,t,f] )
+                    expr = LinExpr()
+                    for s in stds[f, ell]:
+                        g = prob.student_details[s]["grp_id"]
+                        m.addConstr(x[g, p, t] <= delta_cat[p, t, f, ell], "delta_cat1")
+                        expr += x[g, p, t]
+                    m.addConstr(expr, GRB.GREATER_EQUAL, delta_cat[p, t, f, ell], "delta_cat2")
+                    #m.addConstr(quicksum(x[g, p, t] for g in cal_G) >= delta_cat[p, t, f, ell], "delta_cat")
+                m.addConstr(delta_cat_sum[p, t, f] == quicksum(delta_cat[p, t, f, ell]
+                                                               for ell in prob.categories[f+"_num"]), "delta_cat_sum")
+                m.addConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
+                m.addConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
 
     for p in cal_P:
         for t in range(len(prob.projects[p])):
@@ -213,30 +221,46 @@ def model_ip_ext(prob, config):
                 m.addConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
                 m.addConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
                 for f in F_num:
-                    m.addConstr(beta[g1, g2, p, t, f] == alpha[g1, g2, p, t]*math.fabs(
-                        prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "beta_np")
-                m.addConstr(D_s1s2[g1, g2, p, t] == quicksum(
-                    beta[g1, g2, p, t, f] for f in F_num), "D_s1s2")
-                # m.addConstr(discrepancy_av == quicksum(D_s1s2[g1, g2, p, t], "discrepancy_av")
+                    m.addConstr(intra_discrepancy_min[f] <= 10*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
+                        prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
+                    m.addConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
+                        prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
 
-                m.addConstr(intra_discrepancy_min[p, t] <=
-                            D_s1s2[g1, g2, p, t]+100*(1-alpha[g1, g2, p, t]), "intra_min_%s_%s" % (p, t))
-                m.addConstr(inter_discrepancy[p, t] >= D_s1s2[g1, g2, p, t], "inter_%s_%s" % (p, t))
-            m.addConstr(intra_discrepancy_min_global <=
-                        intra_discrepancy_min[p, t], "intra_min_global")
-            m.addConstr(inter_discrepancy_max_global >= inter_discrepancy[p, t])
+    # for p in cal_P:
+    #     for t in range(len(prob.projects[p])):
+    #         for (g1, g2) in itertools.combinations(cal_G, 2):
+    #             m.addConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
+    #             m.addConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
+    #             m.addConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
+    #             for f in F_num:
+    #                 m.addConstr(beta[g1, g2, p, t, f] == alpha[g1, g2, p, t]*math.fabs(
+    #                     prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "beta_np")
+    #             m.addConstr(D_s1s2[g1, g2, p, t] == quicksum(
+    #                 beta[g1, g2, p, t, f] for f in F_num), "D_s1s2")
+    #             # m.addConstr(discrepancy_av == quicksum(D_s1s2[g1, g2, p, t], "discrepancy_av")
+    #
+    #             m.addConstr(intra_discrepancy_min[p, t] <=
+    #                         D_s1s2[g1, g2, p, t]+100*(1-alpha[g1, g2, p, t]), "intra_min_%s_%s" % (p, t))
+    #             m.addConstr(inter_discrepancy[p, t] >= D_s1s2[g1, g2, p, t], "inter_%s_%s" % (p, t))
+    #         m.addConstr(intra_discrepancy_min_global <=
+    #                     intra_discrepancy_min[p, t], "intra_min_global")
+    #         m.addConstr(inter_discrepancy_max_global >= inter_discrepancy[p, t])
     ############################################################
     # Compute optimal solution
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)
     m.ModelSense = GRB.MAXIMIZE
-    m.setObjectiveN(intra_discrepancy_min_global, index=0, priority=20, weight=1)
-    m.setObjectiveN(inter_discrepancy_max_global, index=1, priority=10, weight=-1)
-
-    i=2*len(F_cat)
-    for f in F_cat:
-        m.setObjectiveN(delta_min[f], index=i, priority=i, weight=1)
-        m.setObjectiveN(delta_max[f], index=i-1, priority=i-1, weight=-1)
-        i=i-2
+    nfeats = len(prob.features_orddict)
+    i = 2*nfeats
+    for index, feat in prob.features_orddict.items():
+        print(feat['Variable'], index, i)
+        f = feat['Variable']
+        if feat['Type'] == 'category':
+            m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
+            m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)
+        elif feat['Type'] not in ['object', 'str']:
+            m.setObjectiveN(intra_discrepancy_min[f], index=0, priority=i, weight=1)
+            m.setObjectiveN(intra_discrepancy_max[f], index=1, priority=i-1, weight=-1)
+        i = i-2
 
     # m.setParam("Presolve", 0)
     m.write("model_ip_ext.lp")

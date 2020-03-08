@@ -17,7 +17,7 @@ class Problem:
     def __init__(self, dirname):
         self.study_programs = set()
         self.project_details, self.topics, self.projects = self.read_projects(dirname)
-        self.student_details, self.student_dtypes, self.categories, self.priorities, self.groups, self.std_type = self.read_students(
+        self.student_details, self.features_orddict, self.categories, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
         self.check_tot_capacity()
         self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
@@ -28,6 +28,17 @@ class Problem:
         self.minimax_sol = 0
         # self.__dict__.update(kwds)
 
+    def separate_features(self):
+        F_cat = list()
+        F_num = list()
+        for (index, feat) in self.features_orddict.items():
+            #print(feat, type)
+            if feat['Type'] == 'category':
+                F_cat.append(feat['Variable'])
+            elif feat['Type'] not in ['object', 'str']:
+                F_num.append(feat['Variable'])
+        return F_cat, F_num
+
     def program_transform(self, program):
         # study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
         program = program.lower()
@@ -37,14 +48,19 @@ class Problem:
         return program
 
     def read_projects(self, dirname):
-        projects_file = dirname+"/projects.csv"
-        print("read ", projects_file)
-
+        #projects_file = dirname+"/projects.csv"
+        #print("read ", projects_file)
+        data_file = dirname+"/data.xlsx"
         topics = defaultdict(list)
         # We assume header to be:
         # ID;team;title;min_cap;max_cap;type;prj_id;instit;institute;mini;wl
         # OLD: ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
-        project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
+        #project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
+        try:
+            with open(data_file, 'rb') as f:
+                project_table = pd.read_excel(f, sheet_name='projects', header=0, index_col=None)
+        except FileNotFoundError:
+            print("No file 'data.xlsx' found")
         project_table.index = project_table["prj_id"]
         project_details = project_table.to_dict("index", into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
@@ -72,7 +88,7 @@ class Problem:
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
         projects = defaultdict(list)
-
+        # print(project_details)
         Team = namedtuple("Team", ("min", "max", "type"))
         for topic in topics:
             for t in topics[topic]:
@@ -96,37 +112,53 @@ class Problem:
                 #project_dict[len(project_dict)+1] = n_stds-capacity
 
     def read_students(self, dirname):
-        students_file = dirname+"/students.csv"
-        dtypes_file = dirname+"/dtypes.csv"
-        print("read ", students_file)
-
-        student_dtypes = {'grp_id': 'str', 'group': 'str',
-                          'full_name': 'str', 'priority_list': 'str'}
+        #students_file = dirname+"/students.csv"
+        #dtypes_file = dirname+"/dtypes.csv"
+        #print("read ", students_file)
+        data_file = dirname+"/data.xlsx"
+        features_orddict = OrderedDict()
+        student_table = pd.DataFrame()
         try:
-            with open(dtypes_file) as f:
-                for x in f:
-                    row = x.split(";")
-                    student_dtypes[row[0]] = row[1].strip()
+            with open(data_file, 'rb') as f:
+                features_df = pd.read_excel(f, sheet_name='dtypes', header=0, index_col=None)
+                # for x in f:
+                #    row = x.split(";")
+                #student_dtypes[row[0]] = row[1].strip()
+                # print(dtypes)
+                features_orddict = features_df.to_dict("index", into=OrderedDict)
+                # print(student_dtypes)
+                # dtypes.to_dict("index",into=OrderedDict))
+                dtypes = {'grp_id': 'str', 'group': 'str', 'username': 'str', 'type': 'str', 'email': 'str', 'student_id': 'str',
+                          'full_name': 'str', 'priority_list': 'str'}
+                dtypes.update({row['Variable']: row['Type']
+                               for index, row in features_df.iterrows()})
+                student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
+                                              dtype=dtypes, keep_default_na=False, decimal=',')
+                student_table["username"].apply(lambda x: x.lower())
         except FileNotFoundError:
-            print("No dtypes given")
+            print("No file 'data.xlsx' found")
+        print(student_table)
 
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
-        student_table = pd.read_csv(dirname+"/students.csv", sep=";",
-                                    dtype=student_dtypes, keep_default_na=False, decimal=',')
-        student_table["username"].apply(lambda x: x.lower())
+        # student_table = pd.read_csv(dirname+"/students.csv", sep=";", dtype=student_dtypes, keep_default_na=False, decimal=',')
+        # student_table["username"].apply(lambda x: x.lower())
         # print(student_table)
 
-        #print(student_table.dtypes)
+        # print(student_table.dtypes)
         # Transform the categorical values in integers
-        categories={}
-        for f in student_table.columns:
+        categories = OrderedDict()
+        # for f in student_table.columns:
+        for feat in features_orddict:
+            f = features_orddict[feat]['Variable']
             if student_table[f].dtype.name == 'category':
-                print(student_table[f].cat.categories,len(student_table[f].cat.categories))
-                student_table[f+"_num"] = student_table[f].cat.rename_categories(range(len(student_table[f].cat.categories)))
-                categories[f+"_num"]={x:i for (i,x) in enumerate(student_table[f].cat.categories)}
+                # print(student_table[f].cat.categories,len(student_table[f].cat.categories))
+                student_table[f+"_num"] = student_table[f].cat.rename_categories(
+                    range(len(student_table[f].cat.categories)))
+                categories[f+"_num"] = {x: i for (i, x)
+                                        in enumerate(student_table[f+"_num"].cat.categories)}
 
-        #print(student_table.dtypes)
-        #print(student_table.iloc[:,range(9,27)])
+        # print(student_table.dtypes)
+        print(student_table.iloc[:, range(9, 27)])
 
         student_table.index = student_table["username"]
         student_details = student_table.to_dict("index", into=OrderedDict)
@@ -172,7 +204,7 @@ class Problem:
         print(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
 
-        return (student_details, student_dtypes, categories, priorities, groups, std_type)
+        return (student_details, features_orddict, categories, priorities, groups, std_type)
 
     def calculate_ranks_values(self, prioritize_all=False):
         std_values = {}
