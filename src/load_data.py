@@ -60,7 +60,7 @@ class Problem:
             with open(data_file, 'rb') as f:
                 project_table = pd.read_excel(f, sheet_name='projects', header=0, index_col=None)
         except FileNotFoundError:
-            print("No file 'data.xlsx' found")
+            raise Exception("No file 'data.xlsx' found")
         project_table.index = project_table["prj_id"]
         project_details = project_table.to_dict("index", into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
@@ -152,10 +152,10 @@ class Problem:
             f = features_orddict[feat]['Variable']
             if student_table[f].dtype.name == 'category':
                 # print(student_table[f].cat.categories,len(student_table[f].cat.categories))
-                student_table[f+"_num"] = student_table[f].cat.rename_categories(
+                student_table[f+"_rcat"] = student_table[f].cat.rename_categories(
                     range(len(student_table[f].cat.categories)))
-                categories[f+"_num"] = {x: i for (i, x)
-                                        in enumerate(student_table[f+"_num"].cat.categories)}
+                categories[f+"_rcat"] = {x: i for (i, x)
+                                        in enumerate(student_table[f+"_rcat"].cat.categories)}
 
         # print(student_table.dtypes)
         print(student_table.iloc[:, range(9, 27)])

@@ -154,7 +154,7 @@ def check_sol(sol, problem, sol_id, soldirname=""):
             s = projects[p][j]
             # print([problem.student_details[s][f] for f in F_num])
             M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
-            M_cat[j, :] = np.array([problem.student_details[s][f+"_num"] for f in F_cat])
+            M_cat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
         print("The features for project {}".format(p))
         feat_grp = np.hstack([M_num, M_cat])
         feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(

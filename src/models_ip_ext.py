@@ -15,9 +15,9 @@ def model_ip_ext(prob, config):
     #  create sets of students for each category of each categorical variable
     stds = {}
     for f in F_cat:
-        for ell in prob.categories[f+"_num"]:
+        for ell in prob.categories[f+"_rcat"]:
             stds[f, ell] = {
-                s for s in prob.student_details if prob.student_details[s][f+"_num"] == ell}
+                s for s in prob.student_details if prob.student_details[s][f+"_rcat"] == ell}
 
     # grp_ranks = {}
     # max_rank = 0
@@ -69,7 +69,7 @@ def model_ip_ext(prob, config):
     for p in cal_P:
         for t in range(len(prob.projects[p])):
             for f in F_cat:
-                for ell in prob.categories[f+"_num"]:
+                for ell in prob.categories[f+"_rcat"]:
                     delta_cat[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
                                                        vtype=GRB.BINARY,
                                                        obj=0.0,
@@ -201,7 +201,7 @@ def model_ip_ext(prob, config):
     for f in F_cat:
         for p in cal_P:
             for t in range(len(prob.projects[p])):
-                for ell in prob.categories[f+"_num"]:
+                for ell in prob.categories[f+"_rcat"]:
                     expr = LinExpr()
                     for s in stds[f, ell]:
                         g = prob.student_details[s]["grp_id"]
@@ -210,7 +210,7 @@ def model_ip_ext(prob, config):
                     m.addConstr(expr, GRB.GREATER_EQUAL, delta_cat[p, t, f, ell], "delta_cat2")
                     #m.addConstr(quicksum(x[g, p, t] for g in cal_G) >= delta_cat[p, t, f, ell], "delta_cat")
                 m.addConstr(delta_cat_sum[p, t, f] == quicksum(delta_cat[p, t, f, ell]
-                                                               for ell in prob.categories[f+"_num"]), "delta_cat_sum")
+                                                               for ell in prob.categories[f+"_rcat"]), "delta_cat_sum")
                 m.addConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
                 m.addConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
 
