@@ -104,11 +104,11 @@ def model_ip_ext(prob, config):
         intra_discrepancy_min[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
                                             obj=0.0,
-                                            name='intra_discrepancy_min_%s_%s' % (p, t))
+                                            name='intra_discrepancy_min_%s' % (f))
         intra_discrepancy_max[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
                                             obj=0.0,
-                                            name='intra_discrepancy_min_%s_%s' % (p, t))
+                                            name='intra_discrepancy_max_%s' % (f))
 
     # beta = {}
     # D_s1s2 = {}
@@ -250,7 +250,7 @@ def model_ip_ext(prob, config):
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)
     m.ModelSense = GRB.MAXIMIZE
     nfeats = len(prob.features_orddict)
-    i = 2*nfeats
+    i = 2*nfeats-1
     for index, feat in prob.features_orddict.items():
         print(feat['Variable'], index, i)
         f = feat['Variable']
@@ -258,8 +258,8 @@ def model_ip_ext(prob, config):
             m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
             m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)
         elif feat['Type'] not in ['object', 'str']:
-            m.setObjectiveN(intra_discrepancy_min[f], index=0, priority=i, weight=1)
-            m.setObjectiveN(intra_discrepancy_max[f], index=1, priority=i-1, weight=-1)
+            m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
+            m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
         i = i-2
 
     # m.setParam("Presolve", 0)
