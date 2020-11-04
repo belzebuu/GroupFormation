@@ -158,7 +158,7 @@ class Problem:
                                         in enumerate(student_table[f+"_rcat"].cat.categories)}
 
         # print(student_table.dtypes)
-        print(student_table.iloc[:, range(9, 27)])
+        print(student_table.iloc[:, range(9, student_table.shape[1])])
 
         student_table.index = student_table["username"]
         student_details = student_table.to_dict("index", into=OrderedDict)

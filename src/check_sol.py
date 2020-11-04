@@ -4,6 +4,8 @@ import numpy as np
 import itertools
 import pandas as pd
 
+pd.options.display.float_format = "{:,.2f}".format
+
 
 def check_all_sols(solutions, problem, soldirname=""):
     num_solutions = len(solutions)
@@ -143,6 +145,7 @@ def check_sol(sol, problem, sol_id, soldirname=""):
     F_cat, F_num = problem.separate_features()
     nfeats = len(problem.features_orddict)
     order_cols = [x['Variable'] for i, x in problem.features_orddict.items()]
+    print(order_cols)
     discrepancy_av = np.empty([len(projects), nfeats])
     discrepancy_min = np.empty([len(projects), nfeats])
     discrepancy_max = np.empty([len(projects), nfeats])
@@ -159,7 +162,8 @@ def check_sol(sol, problem, sol_id, soldirname=""):
         feat_grp = np.hstack([M_num, M_cat])
         feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(
             len(projects[p]))), columns=F_num+F_cat)
-        print(feat_grp_df[order_cols])
+        #print(feat_grp_df[order_cols])
+        print(feat_grp_df[order_cols].to_latex(index=True))
 
         # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
         #      for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
@@ -171,14 +175,15 @@ def check_sol(sol, problem, sol_id, soldirname=""):
         discrepancy_av[i, :] = np.hstack([np.average(pairwise, axis=0), counts])
         discrepancy_max[i, :] = np.hstack([np.max(pairwise, axis=0), counts])
         i += 1
-
     # print("The range: ", discrepancy_min,  discrepancy_max, sep="\n")
     summary = np.vstack([np.min(discrepancy_min, axis=0),
                          # np.average(discrepancy_av,axis=0),
                          np.max(discrepancy_max, axis=0)])
-
+    
     sum_df = pd.DataFrame(data=summary, index=["min", "max"], columns=F_num+F_cat)
-    print(sum_df[order_cols])
+    #print(sum_df[order_cols])
+    print(sum_df[order_cols].to_latex(index=True))
+
     # print("Intra: ", np.min(discrepancy_min, axis=0),
     #      #
     #      np.max(discrepancy_max, axis=0), sep="\n")
