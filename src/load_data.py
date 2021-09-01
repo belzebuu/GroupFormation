@@ -16,9 +16,9 @@ from collections import namedtuple
 class Problem:
     def __init__(self, dirname):
         self.study_programs = set()
-        self.project_details, self.topics, self.projects = self.read_projects(dirname)
         self.student_details, self.features_orddict, self.categories, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
+        self.project_details, self.topics, self.projects = self.read_projects(dirname)
         self.check_tot_capacity()
         self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
 
@@ -132,13 +132,15 @@ class Problem:
                           'full_name': 'str', 'priority_list': 'str'}
                 dtypes.update({row['Variable']: row['Type']
                                for index, row in features_df.iterrows()})
+                print(dtypes)
                 student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
-                                              dtype=dtypes, keep_default_na=False, decimal=',')
+                                              dtype=dtypes, keep_default_na=False) #, decimal=',')
                 student_table["username"].apply(lambda x: x.lower())
         except FileNotFoundError:
             print("No file 'data.xlsx' found")
         print(student_table)
-
+        counters = student_table.groupby(['program']).size().reset_index(name='counts')
+        print(counters)
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
         # student_table = pd.read_csv(dirname+"/students.csv", sep=";", dtype=student_dtypes, keep_default_na=False, decimal=',')
         # student_table["username"].apply(lambda x: x.lower())
