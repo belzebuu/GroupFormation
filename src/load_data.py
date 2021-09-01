@@ -254,9 +254,20 @@ class Problem:
         return std_values, std_ranks
 
     def read_restrictions(self, dirname):
-        """ reads types """
-        reader = csv.reader(open(dirname+"/restrictions.csv", "r"), delimiter=";")
+        """ reads restrictions """
+        data_file = dirname+"/data.xlsx"        
+        try:
+            with open(data_file, 'rb') as f:
+                restriction_table = pd.read_excel(f, sheet_name='restrictions', header=0, index_col=None)
+        except FileNotFoundError:
+            raise Exception("No file 'data.xlsx' found")
+
         restrictions = []
+        print("Restriction reader not implemented yet!")
+        return restrictions
+        # TODO handle both readers
+        reader = csv.reader(open(dirname+"/restrictions.csv", "r"), delimiter=";")
+        
         try:
             for row in reader:
                 restrictions += [{"cum": int(row[0]), "topics": [int(row[t])
@@ -267,6 +278,21 @@ class Problem:
 
     def type_compliance(self, dirname):
         """ reads types """
+        data_file = dirname+"/data.xlsx"        
+        try:
+            with open(data_file, 'rb') as f:
+                topics_table = pd.read_excel(f, sheet_name='types', dtype={'key':'str','topic':'str'}, header=0, index_col=None)
+        except FileNotFoundError:
+            raise Exception("No file 'data.xlsx' found")
+
+        #topics.index = project_table["prj_id"]
+        #topics = topics_table.to_dict("records") #, into=OrderedDict)
+        # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
+        valid_prjtypes = {k: list(v) for k, v in topics_table.groupby('key')['topic']}
+        
+        print(valid_prjtypes)
+        return valid_prjtypes
+        # TODO handle both readers
         reader = csv.reader(open(dirname+"/types.csv", "r"), delimiter=";")
         valid_prjtypes = {}
         try:
