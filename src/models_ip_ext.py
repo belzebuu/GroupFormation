@@ -150,101 +150,105 @@ def model_ip_ext(prob, config):
     # Assignment constraints
     # for g in prob.groups.keys():
     # working=[x[g,p,t] for p in prob.projects.keys() for t in range(len(prob.projects[p]))]
-    # m.addConstr(quicksum(working) == 1, 'grp_%s' % g)
+    # m.addLConstr(quicksum(working) == 1, 'grp_%s' % g)
+    print("posting constraints...")
 
     # Assignment constraints
     for g in cal_G:
-        peek = prob.std_type[prob.groups[g][0]]
+        peek = str(prob.std_type[prob.groups[g][0]])
+        
         valid_prjs = [x for x in cal_P if prob.projects[x][0].type in prob.valid_prjtype[peek]]
         # valid_prjs=filter(lambda x: prob.projects[x][0][2]==peek or prob.projects[x][0][2]=='alle', prob.projects.keys())
-
         working = [x[g, p, t] for p in valid_prjs for t in range(len(prob.projects[p]))]
-        m.addConstr(quicksum(working) == 1, 'grp_%s' % g)
+        m.addLConstr(quicksum(working) == 1, 'grp_%s' % g)
         for p in cal_P:
             if not p in valid_prjs:
                 for t in range(len(prob.projects[p])):
-                    m.addConstr(x[g, p, t] == 0, 'ngrp_%s' % g)
+                    m.addLConstr(x[g, p, t] == 0, 'ngrp_%s_%s' % (g,p))
             # if not p in prob.std_ranks[prob.groups[g][0]]:
             #    for t in range(len(prob.projects[p])):
-            #        m.addConstr(x[g, p, t] == 0, 'ngrp_%s' % g)
+            #        m.addLConstr(x[g, p, t] == 0, 'ngrp_%s' % g)
 
     # Capacity constraints
     for p in cal_P:
         for t in range(len(prob.projects[p])):
-            m.addConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) <=
+            m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) <=
                         prob.projects[p][t][1]*y[p, t], 'ub_%s' % (t))
-            m.addConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
+            m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
                         prob.projects[p][t][0]*y[p, t], 'lb_%s' % (t))
             if config.groups == "pre":
-                m.addConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
+                m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
     # # put in u the rank assigned to the group
     # for g in cal_G:
-    #     m.addConstr(u[g] ==
+    #     m.addLConstr(u[g] ==
     #                 quicksum(grp_ranks[g][p] * x[g, p, t] for p in list(grp_ranks[g].keys())
     #                          for t in range(len(prob.projects[p]))),
     #                 'u_%s' % (g))
-    #     m.addConstr(v >= u[g], 'v_%s' % g)
+    #     m.addLConstr(v >= u[g], 'v_%s' % g)
 
     # enforce restrictions on number of teams open across different topics:
     for rest in prob.restrictions:
-        m.addConstr(quicksum(y[p, t] for p in rest["topics"] for t in range(
+        m.addLConstr(quicksum(y[p, t] for p in rest["topics"] for t in range(
             len(prob.projects[p]))) <= rest["cum"], "rest_%s" % "-".join(map(str, rest["topics"])))
 
     # Symmetry breaking on the teams
     for p in cal_P:
         for t in range(len(prob.projects[p])-1):
-            m.addConstr(quicksum(x[g, p, t] for g in cal_G)
+            m.addLConstr(quicksum(x[g, p, t] for g in cal_G)
                         >= quicksum(x[g, p, t+1] for g in cal_G))
 
     #### DISCREPANCIES ########################################################
-    for f in F_cat:
+    print("posting discrepancies")
+    
+    if True:
+        for f in F_cat:
+            for p in cal_P:
+                for t in range(len(prob.projects[p])):
+                    for ell in prob.categories[f+"_rcat"]:
+                        expr = LinExpr()
+                        for s in stds[f, ell]:
+                            g = prob.student_details[s]["grp_id"]
+                            m.addLConstr(x[g, p, t] <= delta_cat[p, t, f, ell], "delta_cat1")
+                            expr += x[g, p, t]
+                        m.addLConstr(expr, GRB.GREATER_EQUAL, delta_cat[p, t, f, ell], "delta_cat2")
+                        #m.addLConstr(quicksum(x[g, p, t] for g in cal_G) >= delta_cat[p, t, f, ell], "delta_cat")
+                    m.addLConstr(delta_cat_sum[p, t, f] == quicksum(delta_cat[p, t, f, ell]
+                                                                for ell in prob.categories[f+"_rcat"]), "delta_cat_sum")
+                    m.addLConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
+                    m.addLConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
+
         for p in cal_P:
             for t in range(len(prob.projects[p])):
-                for ell in prob.categories[f+"_rcat"]:
-                    expr = LinExpr()
-                    for s in stds[f, ell]:
-                        g = prob.student_details[s]["grp_id"]
-                        m.addConstr(x[g, p, t] <= delta_cat[p, t, f, ell], "delta_cat1")
-                        expr += x[g, p, t]
-                    m.addConstr(expr, GRB.GREATER_EQUAL, delta_cat[p, t, f, ell], "delta_cat2")
-                    #m.addConstr(quicksum(x[g, p, t] for g in cal_G) >= delta_cat[p, t, f, ell], "delta_cat")
-                m.addConstr(delta_cat_sum[p, t, f] == quicksum(delta_cat[p, t, f, ell]
-                                                               for ell in prob.categories[f+"_rcat"]), "delta_cat_sum")
-                m.addConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
-                m.addConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
-
-    for p in cal_P:
-        for t in range(len(prob.projects[p])):
-            for (g1, g2) in itertools.combinations(cal_G, 2):
-                m.addConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
-                m.addConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
-                m.addConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
-                for f in F_num:
-                    m.addConstr(intra_discrepancy_min[f] <= 10*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
-                        prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
-                    m.addConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
-                        prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
+                for (g1, g2) in itertools.combinations(cal_G, 2):
+                    m.addLConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
+                    m.addLConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
+                    m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
+                    for f in F_num:
+                        m.addLConstr(intra_discrepancy_min[f] <= 10*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
+                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
+                        m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
+                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
 
     # for p in cal_P:
     #     for t in range(len(prob.projects[p])):
     #         for (g1, g2) in itertools.combinations(cal_G, 2):
-    #             m.addConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
-    #             m.addConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
-    #             m.addConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
+    #             m.addLConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
+    #             m.addLConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
+    #             m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
     #             for f in F_num:
-    #                 m.addConstr(beta[g1, g2, p, t, f] == alpha[g1, g2, p, t]*math.fabs(
+    #                 m.addLConstr(beta[g1, g2, p, t, f] == alpha[g1, g2, p, t]*math.fabs(
     #                     prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "beta_np")
-    #             m.addConstr(D_s1s2[g1, g2, p, t] == quicksum(
+    #             m.addLConstr(D_s1s2[g1, g2, p, t] == quicksum(
     #                 beta[g1, g2, p, t, f] for f in F_num), "D_s1s2")
-    #             # m.addConstr(discrepancy_av == quicksum(D_s1s2[g1, g2, p, t], "discrepancy_av")
+    #             # m.addLConstr(discrepancy_av == quicksum(D_s1s2[g1, g2, p, t], "discrepancy_av")
     #
-    #             m.addConstr(intra_discrepancy_min[p, t] <=
+    #             m.addLConstr(intra_discrepancy_min[p, t] <=
     #                         D_s1s2[g1, g2, p, t]+100*(1-alpha[g1, g2, p, t]), "intra_min_%s_%s" % (p, t))
-    #             m.addConstr(inter_discrepancy[p, t] >= D_s1s2[g1, g2, p, t], "inter_%s_%s" % (p, t))
-    #         m.addConstr(intra_discrepancy_min_global <=
+    #             m.addLConstr(inter_discrepancy[p, t] >= D_s1s2[g1, g2, p, t], "inter_%s_%s" % (p, t))
+    #         m.addLConstr(intra_discrepancy_min_global <=
     #                     intra_discrepancy_min[p, t], "intra_min_global")
-    #         m.addConstr(inter_discrepancy_max_global >= inter_discrepancy[p, t])
+    #         m.addLConstr(inter_discrepancy_max_global >= inter_discrepancy[p, t])
     ############################################################
     # Compute optimal solution
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)

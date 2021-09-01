@@ -38,12 +38,12 @@ def check_sol(sol, problem, sol_id, soldirname=""):
                                if p == sol.topics[x] and t == sol.teams[x]]]
 
     # students only get projects they ranked
-    for s in problem.std_type:
-        if s not in sol.topics:
-            unass_students += 1
-        elif sol.topics[s] not in list(problem.std_ranks[s].keys()):
-            print(sol.topics[s], list(problem.std_ranks[s].keys()))
-            sys.exit("%s student assigned to a project not ranked" % s)
+    # for s in problem.std_type:
+    #     if s not in sol.topics:
+    #         unass_students += 1
+    #     elif sol.topics[s] not in list(problem.std_ranks[s].keys()):
+    #         print(sol.topics[s], list(problem.std_ranks[s].keys()))
+    #         sys.exit("%s student assigned to a project not ranked" % s)
 
     # group members are assigned to the same teams
     for g in problem.groups:
@@ -72,44 +72,44 @@ def check_sol(sol, problem, sol_id, soldirname=""):
             if prj_type != problem.std_type[s] and prj_type != "alle":
                 counter_area += 1
     # count unstable students
-    unstable = 0
-    for g in problem.groups:
-        s = problem.groups[g][0]
-        if s in sol.topics:
-            rank = problem.std_ranks[s][sol.topics[s]]
-            for p in list(problem.std_ranks[s].keys()):
-                if (problem.std_ranks[s][p] < rank):
-                    for t in range(len(problem.projects[p])):
-                        if len(members[p][t]) > 0:
-                            if len(members[p][t])+len(problem.groups[g]) <= problem.projects[p][t][1]:
-                                print("student " + str(s) + " could go in "+str(p))
-                                unstable += len(problem.groups[g])
-                        elif len(problem.groups[g]) >= problem.projects[p][t][0] and (len(problem.groups[g]) <= problem.projects[p][t][1]):
-                            print("student " + str(s) + " could go in unopened "+str(p))
-                            unstable += len(problem.groups[g])
+    # unstable = 0
+    # for g in problem.groups:
+    #     s = problem.groups[g][0]
+    #     if s in sol.topics:
+    #         rank = problem.std_ranks[s][sol.topics[s]]
+    #         for p in list(problem.std_ranks[s].keys()):
+    #             if (problem.std_ranks[s][p] < rank):
+    #                 for t in range(len(problem.projects[p])):
+    #                     if len(members[p][t]) > 0:
+    #                         if len(members[p][t])+len(problem.groups[g]) <= problem.projects[p][t][1]:
+    #                             print("student " + str(s) + " could go in "+str(p))
+    #                             unstable += len(problem.groups[g])
+    #                     elif len(problem.groups[g]) >= problem.projects[p][t][0] and (len(problem.groups[g]) <= problem.projects[p][t][1]):
+    #                         print("student " + str(s) + " could go in unopened "+str(p))
+    #                         unstable += len(problem.groups[g])
     # count classical utility
-    tot_util = 0
-    for s in problem.std_type:
-        if s in sol.topics:
-            tot_util += problem.std_ranks[s][sol.topics[s]]
+    # tot_util = 0
+    # for s in problem.std_type:
+    #     if s in sol.topics:
+    #         tot_util += problem.std_ranks[s][sol.topics[s]]
     ############################################################
     # count envy
-    tot_envy = 0
-    for s in problem.std_type:
-        max_envy = 0
-        for s1 in problem.std_type:
-            if s1 != s and s in sol.topics and s1 in sol.topics:
-                if sol.topics[s1] in problem.std_ranks[s]:
-                    envy = max(0, problem.std_ranks[s][sol.topics[s]] -
-                               problem.std_ranks[s][sol.topics[s1]])
-                    if (envy > max_envy):
-                        max_envy = envy
-        tot_envy += max_envy
+    # tot_envy = 0
+    # for s in problem.std_type:
+    #     max_envy = 0
+    #     for s1 in problem.std_type:
+    #         if s1 != s and s in sol.topics and s1 in sol.topics:
+    #             if sol.topics[s1] in problem.std_ranks[s]:
+    #                 envy = max(0, problem.std_ranks[s][sol.topics[s]] -
+    #                            problem.std_ranks[s][sol.topics[s1]])
+    #                 if (envy > max_envy):
+    #                     max_envy = envy
+    #     tot_envy += max_envy
 
-    max_rank = 0
-    for s in list(problem.std_ranks.keys()):
-        if len(problem.std_ranks[s])+1 > max_rank:
-            max_rank = len(problem.std_ranks[s])+1
+    # max_rank = 0
+    # for s in list(problem.std_ranks.keys()):
+    #     if len(problem.std_ranks[s])+1 > max_rank:
+    #         max_rank = len(problem.std_ranks[s])+1
 
 # 		max_rank=0
 # 		array_ranks={}
@@ -201,34 +201,34 @@ def check_sol(sol, problem, sol_id, soldirname=""):
     print("\nNumb. of unassigned students: " + str(unass_students))
     print("Numb. of underfull teams: " + str(underfull))
     print("Students assigned outside of their area: ", counter_area)
-    print("\nNumb. of unstable: " + str(unstable))
-    print("Tot. util: " + str(tot_util))
-    print("Tot. envy: " + str(tot_envy))
+    #print("\nNumb. of unstable: " + str(unstable))
+    #print("Tot. util: " + str(tot_util))
+    #print("Tot. envy: " + str(tot_envy))
 
     log += [len(problem.std_type)]
     log += [nteams]
     log += [len(problem.projects)]
     log += [unass_students]
     log += [underfull]
-    log += [unstable]
-    log += [tot_util]
-    log += [tot_envy]
+    #log += [unstable]
+    #log += [tot_util]
+    #log += [tot_envy]
 
     ############################################
-    std_group = {x: y for y in problem.groups for x in problem.groups[y]}
-    counter = [0] * (max_rank+1)
+    # std_group = {x: y for y in problem.groups for x in problem.groups[y]}
+    # counter = [0] * (max_rank+1)
 
-    for s in problem.std_values:
-        if s in sol.topics:  # used in the paper:  and len(problem.groups[std_group[s]])==3:
-            rank = problem.std_ranks[s][sol.topics[s]]
-            counter[rank] += 1
+    # for s in problem.std_values:
+    #     if s in sol.topics:  # used in the paper:  and len(problem.groups[std_group[s]])==3:
+    #         rank = problem.std_ranks[s][sol.topics[s]]
+    #         counter[rank] += 1
 
-    s = "\n"
-    for i in range(1, max_rank + 1):
-        out = str(i) + ". prioritet: " + str(counter[i])
-        s = s + out + "\n"
-        log += [counter[i]]
-    print(s)
+    # s = "\n"
+    # for i in range(1, max_rank + 1):
+    #     out = str(i) + ". prioritet: " + str(counter[i])
+    #     s = s + out + "\n"
+    #     log += [counter[i]]
+    # print(s)
 
     ############################################
     if soldirname != "":

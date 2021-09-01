@@ -20,8 +20,9 @@ class Problem:
             dirname)
         self.project_details, self.topics, self.projects = self.read_projects(dirname)
         self.check_tot_capacity()
-        self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
+        #self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
 
+        self.study_programs=set()
         # self.minimax_sol = self.minimax_sol(dirname),
         self.valid_prjtype = self.type_compliance(dirname)
         self.restrictions = self.read_restrictions(dirname)
@@ -39,13 +40,7 @@ class Problem:
                 F_num.append(feat['Variable'])
         return F_cat, F_num
 
-    def program_transform(self, program):
-        # study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
-        program = program.lower()
-        self.study_programs.add(program)
-        # if program not in study_programs:
-        #    sys.exit("program not recognized: {}".format(program))
-        return program
+    
 
     def read_projects(self, dirname):
         #projects_file = dirname+"/projects.csv"
@@ -58,10 +53,11 @@ class Problem:
         #project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
         try:
             with open(data_file, 'rb') as f:
-                project_table = pd.read_excel(f, sheet_name='projects', header=0, index_col=None)
+                project_table = pd.read_excel(f, sheet_name='projects', dtype={'ID':'str','prj_id':'str','title':'str','team':'str','type':'str'}, header=0, index_col=None)
         except FileNotFoundError:
             raise Exception("No file 'data.xlsx' found")
         project_table.index = project_table["prj_id"]
+        project_table["type"]=project_table["type"].apply(self.program_transform)
         project_details = project_table.to_dict("index", into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
         topics = {k: list(v) for k, v in project_table.groupby('ID')['team']}
@@ -135,11 +131,11 @@ class Problem:
                 print(dtypes)
                 student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
                                               dtype=dtypes, keep_default_na=False) #, decimal=',')
-                student_table["username"].apply(lambda x: x.lower())
+                student_table["username"]=student_table["username"].apply(lambda x: x.lower())
         except FileNotFoundError:
             print("No file 'data.xlsx' found")
         print(student_table)
-        counters = student_table.groupby(['program']).size().reset_index(name='counts')
+        counters = student_table.groupby(['type']).size().reset_index(name='counts')
         print(counters)
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
         # student_table = pd.read_csv(dirname+"/students.csv", sep=";", dtype=student_dtypes, keep_default_na=False, decimal=',')
@@ -167,7 +163,7 @@ class Problem:
 
         for s in student_details:
             student_details[s]["priority_list"] = [list(map(int, x.strip().split(" "))) for x in student_details[s]["priority_list"].split(
-                ",")] if student_details[s]["priority_list"] is not '' else []
+                ",")] if student_details[s]["priority_list"] != '' else []
         # print(student_details)
         #reader = csv.reader(open(students_file, "r", encoding="utf8"), delimiter=";")
 
@@ -205,7 +201,7 @@ class Problem:
         student_types = {student_details[u]["type"] for u in student_details}
         print(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
-
+        print(std_type)
         return (student_details, features_orddict, categories, priorities, groups, std_type)
 
     def calculate_ranks_values(self, prioritize_all=False):
@@ -222,7 +218,7 @@ class Problem:
             ranks = {}
             # print priorities;
             for ties in priorities:
-                print(priorities)
+                #print(priorities)
                 for p in ties:
                     if p not in self.topics:
                         print("ERROR:" + u + " expressed a preference for a project " +
@@ -276,20 +272,31 @@ class Problem:
             sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
         return restrictions
 
+    def program_transform(self, program):
+        # study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
+        program = program.lower()
+        self.study_programs.add(program)
+        # if program not in study_programs:
+        #    sys.exit("program not recognized: {}".format(program))
+        return program
+
     def type_compliance(self, dirname):
         """ reads types """
         data_file = dirname+"/data.xlsx"        
         try:
             with open(data_file, 'rb') as f:
-                topics_table = pd.read_excel(f, sheet_name='types', dtype={'key':'str','topic':'str'}, header=0, index_col=None)
+                topics_table = pd.read_excel(f, sheet_name='types', dtype={'key':'str','type':'str'}, header=0, index_col=None)
         except FileNotFoundError:
             raise Exception("No file 'data.xlsx' found")
 
         #topics.index = project_table["prj_id"]
         #topics = topics_table.to_dict("records") #, into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
-        valid_prjtypes = {k: list(v) for k, v in topics_table.groupby('key')['topic']}
-        
+        topics_table["key"]=topics_table["key"].apply(lambda x: self.program_transform(x))
+        topics_table["type"]=topics_table["type"].apply(self.program_transform)
+
+        valid_prjtypes = {k: list(v) for k, v in topics_table.groupby('key')['type']}
+
         print(valid_prjtypes)
         return valid_prjtypes
         # TODO handle both readers
