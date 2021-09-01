@@ -45,8 +45,8 @@ def main():
 
     dirname = args[0]
     problem = Problem(dirname)
-    print(problem.std_values)
-    print(problem.std_ranks)
+    #print(problem.std_values)
+    #print(problem.std_ranks)
 
     model = "minimax"
 
