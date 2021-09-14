@@ -267,7 +267,7 @@ def model_ip_ext(prob, config):
         i = i-2
 
     # m.setParam("Presolve", 0)
-    m.setParam(GRB.param.TimeLimit, 50) #7200)
+    m.setParam(GRB.param.TimeLimit, 1000) #7200)
     m.write("model_ip_ext.lp")
     m.optimize()
     m.write("model_ip_ext.sol")
@@ -296,7 +296,7 @@ def model_ip_ext(prob, config):
             m.params.ObjNumber = o
             # Query the o-th objective value
             print(' ',m.ObjNVal, end='')
-
+        print('')
         teams = {}
         topics = {}
 
