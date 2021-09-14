@@ -173,9 +173,9 @@ def model_ip_ext(prob, config):
     for p in cal_P:
         for t in range(len(prob.projects[p])):
             m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) <=
-                        prob.projects[p][t][1]*y[p, t], 'ub_%s' % (t))
+                        prob.projects[p][t][1]*y[p, t], 'ub_%s_%s' % (p,t))
             m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
-                        prob.projects[p][t][0]*y[p, t], 'lb_%s' % (t))
+                        prob.projects[p][t][0]*y[p, t], 'lb_%s_%s' % (p,t))
             if config.groups == "pre":
                 m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
@@ -267,13 +267,39 @@ def model_ip_ext(prob, config):
         i = i-2
 
     # m.setParam("Presolve", 0)
+    m.setParam(GRB.param.TimeLimit, 50) #7200)
     m.write("model_ip_ext.lp")
     m.optimize()
     m.write("model_ip_ext.sol")
-    # Print solution
-    teams = {}
-    topics = {}
-    if m.status == GRB.status.OPTIMAL:
+   
+    assert m.status == GRB.status.OPTIMAL or (m.status==GRB.status.TIME_LIMIT and m.SolCount>0)
+
+    elapsed = (time.perf_counter() - start)
+    
+    
+    # Query number of multiple objectives, and number of solutions
+    nSolutions  = m.SolCount
+    nObjectives = m.NumObj
+    print('Problem has', nObjectives, 'objectives')
+    print('Gurobi found', nSolutions, 'solutions')
+
+    # For each solution print value for each objective function
+    solutions = []
+    for s in range(nSolutions):
+        # Set which solution we will query from now on
+        m.params.SolutionNumber = s
+
+        # Print objective value of this solution in each objective
+        print('Solution', s, ':', end='')
+        for o in range(nObjectives):
+            # Set which objective we will query
+            m.params.ObjNumber = o
+            # Query the o-th objective value
+            print(' ',m.ObjNVal, end='')
+
+        teams = {}
+        topics = {}
+
         for g in prob.groups:
             for p in cal_P:
                 for t in range(len(prob.projects[p])):
@@ -281,8 +307,7 @@ def model_ip_ext(prob, config):
                         for s in prob.groups[g]:
                             teams[s] = t
                             topics[s] = p
-    elapsed = (time.perf_counter() - start)
-    solution = []
-    solution.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
-    return 1, solution
+        
+        solutions.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
+    return solutions
 

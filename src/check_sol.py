@@ -231,15 +231,19 @@ def check_sol(sol, problem, sol_id, soldirname=""):
     # print(s)
 
     ############################################
-    if soldirname != "":
+    if soldirname != "":        
         filename = "%s/sol_%03d.txt" % (soldirname, sol_id)
-        f = open(filename, "w")
+        try:
+            f = open(filename, "w")
+        except OSError:
+            print(soldirname +" not existing")
+            raise SystemError
         for s in problem.std_type:
             if s in sol.topics:
                 if sol.teams[s] == 0 and len(problem.projects[sol.topics[s]]) == 1:
-                    f.write(s + "\t" + str(sol.topics[s]) + "\t" + "" + "\n")
+                    f.write(s + "\t" + str(sol.topics[s]) + "\t" + str(problem.std_type[s]) + "\n")
                 else:
                     f.write(s + "\t" + str(sol.topics[s]) +
-                            "\t" + 'abcdefghi'[sol.teams[s]] + "\n")
+                            "\t" + 'abcdefghi'[sol.teams[s]] +"\t" + str(problem.std_type[s])+ "\n")
     log += sol.solved
     return log

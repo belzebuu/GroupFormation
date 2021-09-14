@@ -48,16 +48,14 @@ def main():
     #print(problem.std_values)
     #print(problem.std_ranks)
 
-    model = "minimax"
-
-    minimax, solutions = model_ip_ext(problem, options)
+    solutions = model_ip_ext(problem, options)
     stat = check_all_sols(solutions, problem, soldirname="sln")
 
+    model = "discrepancy"
     for st in stat:
         log = ['x']+[model]+solutions[0].solved+[os.path.basename(dirname)]+st
         print('%s' % ' '.join(map(str, log)))
 
-    
 
 
 if __name__ == "__main__":

@@ -196,7 +196,7 @@ class Problem:
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
         projects = defaultdict(list)
-        # print(project_details)
+        print(project_details)
         Team = namedtuple("Team", ("min", "max", "type"))
         for topic in topics:
             for t in topics[topic]:
