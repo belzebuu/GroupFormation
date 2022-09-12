@@ -19,15 +19,12 @@ def model_ip_ext(prob, config):
             stds[f, ell] = {
                 s for s in prob.student_details if prob.student_details[s][f+"_rcat"] == ell}
 
-    # grp_ranks = {}
-    # max_rank = 0
+    
     cal_G = list(prob.groups.keys())
     cal_P = list(prob.projects.keys())
     for g in cal_G:
         s = prob.groups[g][0]  # we consider only first student, the other must have equal prefs
-        # grp_ranks[g] = prob.std_ranks[s]
-        # if len(grp_ranks[g]) > max_rank:
-        #    max_rank = len(grp_ranks[g])
+     
 
     a = dict()  # the size of the group
     for g in cal_G:
@@ -52,17 +49,7 @@ def model_ip_ext(prob, config):
                                obj=0.0,
                                name='y_%s_%s' % (p, t))
 
-    # u = {}  # rank assigned per group
-    # for g in cal_G:
-    #     u[g] = m.addVar(lb=0.0, ub=max_rank,
-    #                     vtype=GRB.INTEGER,
-    #                     obj=0.0,
-    #                     name='u_%s' % (g))
-    #
-    # v = m.addVar(lb=0.0, ub=max_rank,
-    #              vtype=GRB.INTEGER,
-    #              obj=1.0,
-    #              name='v_%s' % (g))
+  
 
     delta_cat_sum = {}
     delta_cat = {}  # var to store if category ell of feature f is used in (p,t)
@@ -110,47 +97,9 @@ def model_ip_ext(prob, config):
                                             obj=0.0,
                                             name='intra_discrepancy_max_%s' % (f))
 
-    # beta = {}
-    # D_s1s2 = {}
-    # for (g1, g2) in itertools.combinations(cal_G, 2):
-    #     for p in cal_P:
-    #         for t in range(len(prob.projects[p])):
-    #             D_s1s2[g1, g2, p, t] = m.addVar(lb=0.0,  # ub=1.0,
-    #                                             vtype=GRB.CONTINUOUS,
-    #                                             obj=0.0,
-    #                                             name='D_s1s2_%s_%s_%s_%s' % (g1, g2, p, t))
-    #             for f in F_num:
-    #                 beta[g1, g2, p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
-    #                                                  vtype=GRB.CONTINUOUS,
-    #                                                  obj=0.0,
-    #                                                  name='beta_%s_%s_%s_%s_%s' % (g1, g2, p, t, f))
-
-    # intra_discrepancy_min = {}
-    # inter_discrepancy_max = {}
-    # for p in cal_P:
-    #     for t in range(len(prob.projects[p])):
-    #         intra_discrepancy_min[p, t] = m.addVar(lb=0.0,  # ub=1.0,
-    #                                                vtype=GRB.CONTINUOUS,
-    #                                                obj=0.0,
-    #                                                name='intra_discrepancy_min_%s_%s' % (p, t))
-    #         inter_discrepancy[p, t] = m.addVar(lb=0.0,  # ub=1.0,
-    #                                            vtype=GRB.CONTINUOUS,
-    #                                            obj=0.0,
-    #                                            name='inter_discrepancy_%s_%s' % (p, t))
-    # intra_discrepancy_min_global = m.addVar(lb=0.0,  # ub=1.0,
-    #                                         vtype=GRB.CONTINUOUS,
-    #                                         obj=0.0,
-    #                                         name='intra_discrepancy_min_global')
-    # inter_discrepancy_max_global = m.addVar(lb=0.0,  # ub=1.0,
-    #                                         vtype=GRB.CONTINUOUS,
-    #                                         obj=0.0,
-    #                                         name='inter_discrepancy_max_global')
+  
     m.update()
     ############################################################
-    # Assignment constraints
-    # for g in prob.groups.keys():
-    # working=[x[g,p,t] for p in prob.projects.keys() for t in range(len(prob.projects[p]))]
-    # m.addLConstr(quicksum(working) == 1, 'grp_%s' % g)
     print("posting constraints...")
 
     # Assignment constraints
@@ -165,9 +114,6 @@ def model_ip_ext(prob, config):
             if not p in valid_prjs:
                 for t in range(len(prob.projects[p])):
                     m.addLConstr(x[g, p, t] == 0, 'ngrp_%s_%s' % (g,p))
-            # if not p in prob.std_ranks[prob.groups[g][0]]:
-            #    for t in range(len(prob.projects[p])):
-            #        m.addLConstr(x[g, p, t] == 0, 'ngrp_%s' % g)
 
     # Capacity constraints
     for p in cal_P:
@@ -178,14 +124,6 @@ def model_ip_ext(prob, config):
                         prob.projects[p][t][0]*y[p, t], 'lb_%s_%s' % (p,t))
             if config.groups == "pre":
                 m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
-
-    # # put in u the rank assigned to the group
-    # for g in cal_G:
-    #     m.addLConstr(u[g] ==
-    #                 quicksum(grp_ranks[g][p] * x[g, p, t] for p in list(grp_ranks[g].keys())
-    #                          for t in range(len(prob.projects[p]))),
-    #                 'u_%s' % (g))
-    #     m.addLConstr(v >= u[g], 'v_%s' % g)
 
     # enforce restrictions on number of teams open across different topics:
     for rest in prob.restrictions:
@@ -268,9 +206,9 @@ def model_ip_ext(prob, config):
 
     # m.setParam("Presolve", 0)
     m.setParam(GRB.param.TimeLimit, 1000) #7200)
-    m.write("model_ip_ext.lp")
+    m.write("log/model_ip_ext.lp")
     m.optimize()
-    m.write("model_ip_ext.sol")
+    m.write("log/model_ip_ext.sol")
    
     assert m.status == GRB.status.OPTIMAL or (m.status==GRB.status.TIME_LIMIT and m.SolCount>0)
 

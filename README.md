@@ -51,3 +51,18 @@ with it.
 #### restrictions
 
 Currently not implemented, leave empty.
+
+
+## Run the Program
+
+To run the program you need the commercial solver [Gurobi](https://www.gurobi.com/) with the Python interface. If that is available you can test this program with: 
+
+```
+make 
+```
+
+Change the DATA parameter in the Makefile for solving your own data set.
+
+## Contact
+
+For more information contact the maintainer: marco@imada.sdu.dk.
