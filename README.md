@@ -46,7 +46,7 @@ students from the same study program.
 Here we express the compatibilities between study programs. Each line
 contains a type that is the `key` and a type `type` that is compatible
 with it.
-
+If a type is compatible with several types, write the pairwise compatibilities rowwise.
 
 #### restrictions
 

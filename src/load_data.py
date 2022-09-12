@@ -80,6 +80,7 @@ class Problem:
                 student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
                                               dtype=dtypes, keep_default_na=False) #, decimal=',')
                 student_table["username"]=student_table["username"].apply(lambda x: x.lower())
+                print(student_table["username"].value_counts())
         except FileNotFoundError:
             print("No file 'data.xlsx' found")
         print(student_table)
@@ -168,12 +169,12 @@ class Problem:
                 project_table = pd.read_excel(f, sheet_name='projects', dtype={'ID':'str','prj_id':'str','title':'str','team':'str','type':'str'}, header=0, index_col=None)
         except FileNotFoundError:
             raise Exception("No file 'data.xlsx' found")
-        project_table.index = project_table["prj_id"]
+        project_table.index = project_table["ID"]+project_table["team"].astype(str)
         project_table["type"]=project_table["type"].apply(self.program_transform)
         project_details = project_table.to_dict("index", into=OrderedDict)
         # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
         topics = {k: list(v) for k, v in project_table.groupby('ID')['team']}
-
+        print(topics)
         # OrderedDict(
         # ProjektNr=row[],
         # Undergruppe=line[1],
@@ -200,7 +201,7 @@ class Problem:
         Team = namedtuple("Team", ("min", "max", "type"))
         for topic in topics:
             for t in topics[topic]:
-                id = str(topic)+t
+                id = str(topic)+str(t)
                 projects[topic].append(Team(project_details[id]["min_cap"],
                                             project_details[id]["max_cap"],
                                             project_details[id]["type"]
