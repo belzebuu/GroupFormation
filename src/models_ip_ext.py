@@ -200,28 +200,34 @@ def model_ip_ext(prob, config):
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)
     m.ModelSense = GRB.MAXIMIZE
     nfeats = len(prob.features_orddict)
-    i = 2*nfeats-1
+    priority_value = 2*nfeats+2
+    index_value=0
     for index, feat in prob.features_orddict.items():
-        print(feat['Variable'], index, i)
+        print(feat['Variable'], index, priority_value)
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
             if feat['Heterogeneous']>0: # must be hetherogreneous
-                m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
-                m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)            
+                m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(delta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)            
             elif feat['Heterogeneous']<0: # must be homogeneous
                 #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
-                m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)            
+                m.setObjectiveN(delta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f)            
         elif feat['Type'] not in ['object', 'str']: # numerical
             if feat['Heterogeneous']>0: # must be hetherogeneous
-                m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
-                m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(intra_discrepancy_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)
             elif feat['Heterogeneous']<0: # must be homogeneous
-                m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
+                m.setObjectiveN(intra_discrepancy_max[f], index=index_value, priority=priority_value, weight=-1, name=f)
             elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous
-                m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
-                m.setObjectiveN(intra_discrepancy_sum[f], index=i-1, priority=i, weight=1)
-
-        i = i-2
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(intra_discrepancy_sum[f], index=index_value+1, priority=priority_value-1, weight=1, name=f)
+        if feat['Heterogeneous']<0:
+            priority_value -= 1
+            index_value += 1
+        else:
+            priority_value -= 2
+            index_value += 2
+        
 
     # m.setParam("Presolve", 0)
     m.setParam(GRB.param.TimeLimit, 6000) #7200)
