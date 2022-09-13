@@ -62,18 +62,18 @@ def model_ip_ext(prob, config):
                                                        obj=0.0,
                                                        name='delta_cat_%s_%s_%s_%s' % (p, t, f, ell))
                 delta_cat_sum[p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
-                                                  vtype=GRB.CONTINUOUS,
+                                                  vtype=GRB.INTEGER,
                                                   obj=0.0,
                                                   name='delta_cat_sum_%s_%s_%s' % (p, t, f))
     delta_cat_min = {}
     delta_cat_max = {}
     for f in F_cat:
         delta_cat_min[f] = m.addVar(lb=0.0,  # ub=1.0,
-                                    vtype=GRB.CONTINUOUS,
+                                    vtype=GRB.INTEGER,
                                     obj=0.0,
                                     name='delta_cat_min_%s' % (f))
         delta_cat_max[f] = m.addVar(lb=0.0,  # ub=1.0,
-                                    vtype=GRB.CONTINUOUS,
+                                    vtype=GRB.INTEGER,
                                     obj=0.0,
                                     name='delta_cat_max_%s' % (f))
 
@@ -203,6 +203,7 @@ def model_ip_ext(prob, config):
     priority_value = 2*nfeats+2
     index_value=0
     for index, feat in prob.features_orddict.items():
+        break
         print(feat['Variable'], index, priority_value)
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
@@ -227,10 +228,13 @@ def model_ip_ext(prob, config):
         else:
             priority_value -= 2
             index_value += 2
-        
+        break
+    #m.setObjective(-delta_cat_max["attendcourse"])            
+    m.setObjective(-sum(delta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
 
     # m.setParam("Presolve", 0)
     m.setParam(GRB.param.TimeLimit, 6000) #7200)
+    m.setParam(GRB.param.MIPFocus, 1) #7200)
     m.write("log/model_ip_ext.lp")
     m.optimize()
     m.write("log/model_ip_ext.sol")
