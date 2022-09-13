@@ -87,6 +87,7 @@ def model_ip_ext(prob, config):
                                                name='alpha_%s_%s_%s_%s' % (g1, g2, p, t))
     intra_discrepancy_min = {}
     intra_discrepancy_max = {}
+    intra_discrepancy_sum = {}
     for f in F_num:
         intra_discrepancy_min[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
@@ -96,6 +97,10 @@ def model_ip_ext(prob, config):
                                             vtype=GRB.CONTINUOUS,
                                             obj=0.0,
                                             name='intra_discrepancy_max_%s' % (f))
+        intra_discrepancy_sum[f] = m.addVar(lb=0.0,  # ub=1.0,
+                                            vtype=GRB.CONTINUOUS,
+                                            obj=0.0,
+                                            name='intra_discrepancy_sum_%s' % (f))
 
   
     m.update()
@@ -163,10 +168,13 @@ def model_ip_ext(prob, config):
                     m.addLConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
                     m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
                     for f in F_num:
-                        m.addLConstr(intra_discrepancy_min[f] <= 10*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
+                        m.addLConstr(intra_discrepancy_min[f] <= 20*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
                             prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
                         m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
                             prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
+                for f in F_num:
+                    m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*math.fabs(
+                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]) for (g1, g2) in itertools.combinations(cal_G, 2)), "intra_sum_np_%s" % f)
 
     # for p in cal_P:
     #     for t in range(len(prob.projects[p])):
@@ -196,16 +204,27 @@ def model_ip_ext(prob, config):
     for index, feat in prob.features_orddict.items():
         print(feat['Variable'], index, i)
         f = feat['Variable']
-        if feat['Type'] == 'category':
-            m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
-            m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)
-        elif feat['Type'] not in ['object', 'str']:
-            m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
-            m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
+        if feat['Type'] == 'category': # categorical 
+            if feat['Heterogeneous']>0: # must be hetherogreneous
+                m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
+                m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)            
+            elif feat['Heterogeneous']<0: # must be homogeneous
+                #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
+                m.setObjectiveN(delta_cat_max[f], index=i-1, priority=i-1, weight=-1)            
+        elif feat['Type'] not in ['object', 'str']: # numerical
+            if feat['Heterogeneous']>0: # must be hetherogeneous
+                m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
+                m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
+            elif feat['Heterogeneous']<0: # must be homogeneous
+                m.setObjectiveN(intra_discrepancy_max[f], index=i-1, priority=i-1, weight=-1)
+            elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous
+                m.setObjectiveN(intra_discrepancy_min[f], index=i, priority=i, weight=1)
+                m.setObjectiveN(intra_discrepancy_sum[f], index=i-1, priority=i, weight=1)
+
         i = i-2
 
     # m.setParam("Presolve", 0)
-    m.setParam(GRB.param.TimeLimit, 1000) #7200)
+    m.setParam(GRB.param.TimeLimit, 6000) #7200)
     m.write("log/model_ip_ext.lp")
     m.optimize()
     m.write("log/model_ip_ext.sol")
