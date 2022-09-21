@@ -16,24 +16,29 @@ import textwrap
 def main():
     s = textwrap.dedent("""\
                         Example:
-                        python3 src/main.py -g post data/private/zhiru-e22-ds830/ | tee log.txt
+                        python3 src/main.py -m data/private/zhiru-e22-ds830/ | tee log.txt
                         """)
     parser = argparse.ArgumentParser(description='Exam scheduler.', epilog=s)
-    parser.add_argument("-m", "--merge_groups", dest="merging_groups", action='store_true', help="To allow merging of groups in teams [default: %default]")
-    parser.add_argument('-l','--log_dir', metavar='LogDir', dest='logdirname', type=str,
+    parser.add_argument("-m", "--merge_groups", dest="merging_groups", action='store_true', help="To allow merging of groups in teams [default: %(default)s]")
+    parser.add_argument("-t", "--time_limit", dest="time_limit", action='store', type=int, default=100, help="Time limit [default: %(default)s]")
+    parser.add_argument('-l','--log_dir', metavar='logdir', dest='logdirname', type=str,
                         action='store', nargs=1, required=False, default="log",
-                        help='the name of the directory where to put log files. It checks for existance. [default: %default]')
-    parser.add_argument('-s','--sol_dir', metavar='SolDir', dest='soldirname', type=str,
+                        help='the name of the directory where to put log files. It checks for existance. [default: %(default)s]')
+    parser.add_argument('-s','--sol_dir', metavar='soldir', dest='soldirname', type=str,
                         action='store', nargs=1, required=False, default="sln",
-                        help='the name of the directory where to put solution files. It checks for existance. [default: %default]')
-    parser.add_argument("input_directory", help="The directory of the input data",type=str)
+                        help='the name of the directory where to put solution files. It checks for existance. [default: %(default)s]')
+    parser.add_argument("input_directory", help="The directory of the input data", type=str)
     args = parser.parse_args()
 
+    if not os.path.exists(args.logdirname):
+        os.makedirs(args.logdirname, mode = 0o777)
+    if not os.path.exists(args.soldirname):
+        os.makedirs(args.soldirname, mode = 0o777)
 
     problem = Problem(args.input_directory)
 
-    solutions = model_ip_ext(problem, args.merging_groups)
-    stat = check_all_sols(solutions, problem, soldirname="sln")
+    solutions = model_ip_ext(problem, args.merging_groups, args.logdirname, args.time_limit)
+    stat = check_all_sols(solutions, problem, soldirname=args.soldirname)
 
     model = "discrepancy"
     for st in stat:

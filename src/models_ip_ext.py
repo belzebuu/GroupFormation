@@ -4,9 +4,9 @@ import time
 from gurobipy import *
 from functools import reduce
 import math
+import os
 
-
-def model_ip_ext(prob, merging_groups_teams_allowed):
+def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
     start = time.perf_counter()
     m = Model('leximin')
 
@@ -234,11 +234,11 @@ def model_ip_ext(prob, merging_groups_teams_allowed):
     #m.setObjective(-sum(delta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
 
     # m.setParam("Presolve", 0)
-    m.setParam(GRB.param.TimeLimit, 14400) #7200)
+    m.setParam(GRB.param.TimeLimit, time_limit) #7200)
     m.setParam(GRB.param.MIPFocus, 1) #7200)
-    m.write("log/model_ip_ext.lp")
+    m.write(os.path.join(log_dirname,"model_ip_ext.lp"))
     m.optimize()
-    m.write("log/model_ip_ext.sol")
+    m.write(os.path.join(log_dirname,"model_ip_ext.sol"))
    
     assert m.status == GRB.status.OPTIMAL or (m.status==GRB.status.TIME_LIMIT and m.SolCount>0)
 
