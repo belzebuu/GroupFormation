@@ -81,43 +81,50 @@ def check_sol(sol, problem, sol_id, soldirname=""):
     discrepancy_max = np.empty([len(projects), nfeats])
     i = 0
     filename = "%s/sol_%03d" % (soldirname, sol_id)
-    with pd.ExcelWriter(filename+'.xlsx') as excel_writer:
-        for p in sorted(projects):
-            M_num = np.empty((len(projects[p]), len(F_num)))
-            M_cat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
-            for j in range(len(projects[p])):
-                s = projects[p][j]
-                # print([problem.student_details[s][f] for f in F_num])
-                M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
-                M_cat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
-            
-            feat_grp = np.hstack([M_num, M_cat])
-            feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(
-                len(projects[p]))), columns=F_num+F_cat)
-            #print(feat_grp_df[order_cols])
-            print("The features for project {}".format(p))
-            print(feat_grp_df[order_cols].to_latex(index=True))
-            feat_grp_df[order_cols].to_excel(excel_writer, sheet_name='grp_'+str(p))
 
-            # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
-            #      for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
-            # print("The norm L_1 of the pairwise discrepancies:",Dss)
-            pairwise = np.vstack([np.absolute(M_num[u, :]-M_num[v, :])
-                                for (u, v) in itertools.combinations(range(len(projects[p])), 2)])
-            counts = np.apply_along_axis(lambda a: len(np.unique(a)), 0, M_cat)
-            discrepancy_min[i, :] = np.hstack([np.min(pairwise, axis=0), counts])
-            discrepancy_av[i, :] = np.hstack([np.average(pairwise, axis=0), counts])
-            discrepancy_max[i, :] = np.hstack([np.max(pairwise, axis=0), counts])
-            i += 1
-        # print("The range: ", discrepancy_min,  discrepancy_max, sep="\n")
-        summary = np.vstack([np.min(discrepancy_min, axis=0),
-                            # np.average(discrepancy_av,axis=0),
-                            np.max(discrepancy_max, axis=0)])
+    excel_writer = pd.ExcelWriter(filename+'.xlsx') 
+    latexfile = open(filename+".tex", encoding="utf-8",mode="w")
+    for p in sorted(projects):
+        M_num = np.empty((len(projects[p]), len(F_num)))
+        M_cat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
+        for j in range(len(projects[p])):
+            s = projects[p][j]
+            # print([problem.student_details[s][f] for f in F_num])
+            M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
+            M_cat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
         
-        sum_df = pd.DataFrame(data=summary, index=["min", "max"], columns=F_num+F_cat)
-        #print(sum_df[order_cols])
-        print(sum_df[order_cols].to_latex(index=True))
-        sum_df[order_cols].to_excel(excel_writer, sheet_name='overall')
+        feat_grp = np.hstack([M_num, M_cat])
+        feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(
+            len(projects[p]))), columns=F_num+F_cat)
+        #print(feat_grp_df[order_cols])
+        #         
+        latexfile.write(feat_grp_df[order_cols].to_latex(index=True, caption=f"The features for project {p}"))
+        feat_grp_df[order_cols].to_excel(excel_writer, sheet_name='grp_'+str(p))
+
+        # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
+        #      for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
+        # print("The norm L_1 of the pairwise discrepancies:",Dss)
+        pairwise = np.vstack([np.absolute(M_num[u, :]-M_num[v, :])
+                            for (u, v) in itertools.combinations(range(len(projects[p])), 2)])
+        counts = np.apply_along_axis(lambda a: len(np.unique(a)), 0, M_cat)
+        discrepancy_min[i, :] = np.hstack([np.min(pairwise, axis=0), counts])
+        discrepancy_av[i, :] = np.hstack([np.average(pairwise, axis=0), counts])
+        discrepancy_max[i, :] = np.hstack([np.max(pairwise, axis=0), counts])
+        i += 1
+    # print("The range: ", discrepancy_min,  discrepancy_max, sep="\n")
+    summary = np.vstack([np.min(discrepancy_min, axis=0),
+                        # np.average(discrepancy_av,axis=0),
+                        np.max(discrepancy_max, axis=0)])
+    
+    sum_df = pd.DataFrame(data=summary, index=["min", "max"], columns=F_num+F_cat)
+    #print(sum_df[order_cols])
+
+    sum_df[order_cols].to_excel(excel_writer, sheet_name='overall')    
+    latexfile.write(sum_df[order_cols].to_latex(index=True, caption="Overall"))
+    
+    excel_writer.close()
+    latexfile.close()
+        
     
     # print("Intra: ", np.min(discrepancy_min, axis=0),
     #      #

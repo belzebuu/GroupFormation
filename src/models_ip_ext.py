@@ -6,7 +6,7 @@ from functools import reduce
 import math
 
 
-def model_ip_ext(prob, config):
+def model_ip_ext(prob, merging_groups_teams_allowed):
     start = time.perf_counter()
     m = Model('leximin')
 
@@ -127,7 +127,7 @@ def model_ip_ext(prob, config):
                         prob.projects[p][t][1]*y[p, t], 'ub_%s_%s' % (p,t))
             m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
                         prob.projects[p][t][0]*y[p, t], 'lb_%s_%s' % (p,t))
-            if config.groups == "pre":
+            if not merging_groups_teams_allowed:
                 m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
     # enforce restrictions on number of teams open across different topics:
@@ -144,7 +144,7 @@ def model_ip_ext(prob, config):
     #### DISCREPANCIES ########################################################
     print("posting discrepancies")
     
-    if True:
+    if True: # categorical variables
         for f in F_cat:
             for p in cal_P:
                 for t in range(len(prob.projects[p])):
@@ -161,6 +161,7 @@ def model_ip_ext(prob, config):
                     m.addLConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
                     m.addLConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
 
+    if True: # numerical variables
         for p in cal_P:
             for t in range(len(prob.projects[p])):
                 for (g1, g2) in itertools.combinations(cal_G, 2):
@@ -172,9 +173,9 @@ def model_ip_ext(prob, config):
                             prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
                         m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
                             prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
-                for f in F_num:
-                    m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*math.fabs(
-                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]) for (g1, g2) in itertools.combinations(cal_G, 2)), "intra_sum_np_%s" % f)
+        for f in F_num:
+            m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*math.fabs(
+                prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]) for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
 
     # for p in cal_P:
     #     for t in range(len(prob.projects[p])):
@@ -203,7 +204,6 @@ def model_ip_ext(prob, config):
     priority_value = 2*nfeats+2
     index_value=0
     for index, feat in prob.features_orddict.items():
-        break
         print(feat['Variable'], index, priority_value)
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
@@ -220,20 +220,21 @@ def model_ip_ext(prob, config):
             elif feat['Heterogeneous']<0: # must be homogeneous
                 m.setObjectiveN(intra_discrepancy_max[f], index=index_value, priority=priority_value, weight=-1, name=f)
             elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous
-                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)                
                 m.setObjectiveN(intra_discrepancy_sum[f], index=index_value+1, priority=priority_value-1, weight=1, name=f)
+
         if feat['Heterogeneous']<0:
             priority_value -= 1
             index_value += 1
         else:
             priority_value -= 2
             index_value += 2
-        break
+        
     #m.setObjective(-delta_cat_max["attendcourse"])            
-    m.setObjective(-sum(delta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
+    #m.setObjective(-sum(delta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
 
     # m.setParam("Presolve", 0)
-    m.setParam(GRB.param.TimeLimit, 6000) #7200)
+    m.setParam(GRB.param.TimeLimit, 14400) #7200)
     m.setParam(GRB.param.MIPFocus, 1) #7200)
     m.write("log/model_ip_ext.lp")
     m.optimize()
