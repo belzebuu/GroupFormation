@@ -4,10 +4,10 @@ import argparse
 import os
 from time import *
 import sys
-from load_data import *
-from utils import *
-from models_ip_ext import *
-from check_sol import *
+from prensio.load_data import *
+from prensio.utils import *
+from prensio.models_ip_ext import *
+from prensio.check_sol import *
 
 from subprocess import *
 import textwrap
@@ -16,7 +16,7 @@ import textwrap
 def main():
     s = textwrap.dedent("""\
                         Example:
-                        python3 src/main.py -m data/private/zhiru-e22-ds830/ | tee log.txt
+                        python3 src/main.py -m data/example/ | tee log.txt
                         """)
     parser = argparse.ArgumentParser(description='Exam scheduler.', epilog=s)
     parser.add_argument("-m", "--merge_groups", dest="merging_groups", action='store_true', help="To allow merging of groups in teams [default: %(default)s]")

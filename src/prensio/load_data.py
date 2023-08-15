@@ -14,7 +14,9 @@ from collections import namedtuple
 
 
 class Problem:
-    def __init__(self, dirname):
+    def __init__(self, dirname, logdir="./log"):
+        self.logdir=logdir
+        os.makedirs(self.logdir, exist_ok=True)
         self.study_programs = set()
         self.student_details, self.features_orddict, self.categories, self.priorities, self.groups, self.std_type = self.read_students(
             dirname)
@@ -137,7 +139,7 @@ class Problem:
         #         Tilmeldingstidspunkt=(len(line) > 4 and line[6] or "")
         #     )
 
-        filehandle = codecs.open(os.path.join("log", "students.json"),  "w", "utf-8")
+        filehandle = codecs.open(os.path.join(self.logdir, "students.json"),  "w", "utf-8")
         json.dump(student_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 
@@ -192,7 +194,7 @@ class Problem:
         # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
         # )
 
-        filehandle = codecs.open(os.path.join("log", "projects.json"),  "w", "utf-8")
+        filehandle = codecs.open(os.path.join(self.logdir, "projects.json"),  "w", "utf-8")
         json.dump(project_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
 

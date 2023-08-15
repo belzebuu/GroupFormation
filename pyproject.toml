@@ -1,0 +1,23 @@
+[build-system]
+requires = ["flit_core>=3.4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "prensio"
+version = "0.0.1"
+authors = [
+  { name="Marco Chiarandini", email="marco@imada.sdu.dk" },
+]
+description = "A program to group students in teams controlling for within group heterogeneity and between group homogeneity"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/belzebuu/GroupFormation"
+"Bug Tracker" = "https://github.com/belzebuu/GroupFormation/issues"
+

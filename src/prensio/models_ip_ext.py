@@ -1,10 +1,11 @@
-from utils import *
-from load_data import *
 import time
 from gurobipy import *
 from functools import reduce
 import math
 import os
+from prensio.utils import *
+from prensio.load_data import *
+
 
 def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
     start = time.perf_counter()
