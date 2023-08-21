@@ -10,12 +10,12 @@ import subprocess
 pd.options.display.float_format = "{:,.2f}".format
 
 
-def check_all_sols(solutions, problem, soldirname):
+def check_all_sols(solutions, problem, soldirname, latex = False):
     num_solutions = len(solutions)
     print("num_solutions: ", num_solutions)
     logs = []
     for sol in solutions:
-        log = check_sol(sol, problem, num_solutions, soldirname)
+        log = check_sol(sol, problem, num_solutions, soldirname, latex)
         logs += [log]
         num_solutions = num_solutions-1
     return logs
@@ -133,7 +133,7 @@ def check_sol(sol, problem, sol_id, soldirname, latex=False):
 
     sum_df[order_cols].to_excel(excel_writer, sheet_name='overall')    
     excel_writer.close()
-    
+
     if latex:
         latexfile.write(sum_df[order_cols].style.to_latex(hrules=True, caption="Overall"))
         latexfile.write("\end{document}")
