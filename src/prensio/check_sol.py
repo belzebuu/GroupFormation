@@ -21,7 +21,7 @@ def check_all_sols(solutions, problem, soldirname):
     return logs
 
 
-def check_sol(sol, problem, sol_id, soldirname):
+def check_sol(sol, problem, sol_id, soldirname, latex=False):
     log = []
     unass_students = 0
     members = {}
@@ -87,13 +87,14 @@ def check_sol(sol, problem, sol_id, soldirname):
     filepath = os.path.join(soldirname, filename)
 
     excel_writer = pd.ExcelWriter(filepath+'.xlsx') 
-    latexfile = open(filepath+".tex", encoding="utf-8",mode="w")
-    boilerplate = textwrap.dedent("""\
-                                  \\documentclass{article}
-                                  \\usepackage{booktabs}
-                                  \\begin{document}
-                                  """)
-    latexfile.write(boilerplate)
+    if latex:
+        latexfile = open(filepath+".tex", encoding="utf-8",mode="w")
+        boilerplate = textwrap.dedent("""\
+                                      \\documentclass{article}
+                                      \\usepackage{booktabs}
+                                      \\begin{document}
+                                      """)
+        latexfile.write(boilerplate)
     for p in sorted(projects):
         M_num = np.empty((len(projects[p]), len(F_num)))
         M_cat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
@@ -108,7 +109,8 @@ def check_sol(sol, problem, sol_id, soldirname):
             len(projects[p]))), columns=F_num+F_cat)
         #print(feat_grp_df[order_cols])
         #         
-        latexfile.write(feat_grp_df[order_cols].style.to_latex(hrules=True, caption=f"The features for project {p}"))
+        if latex:
+            latexfile.write(feat_grp_df[order_cols].style.to_latex(hrules=True, caption=f"The features for project {p}"))
         feat_grp_df[order_cols].to_excel(excel_writer, sheet_name='grp_'+str(p))
 
         # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
@@ -130,13 +132,16 @@ def check_sol(sol, problem, sol_id, soldirname):
     #print(sum_df[order_cols])
 
     sum_df[order_cols].to_excel(excel_writer, sheet_name='overall')    
-    latexfile.write(sum_df[order_cols].style.to_latex(hrules=True, caption="Overall"))
-    
     excel_writer.close()
-    latexfile.write("\end{document}")
-    latexfile.close()
     
-    subprocess.run(["pdflatex", filename+".tex"], cwd=soldirname, capture_output=False)
+    if latex:
+        latexfile.write(sum_df[order_cols].style.to_latex(hrules=True, caption="Overall"))
+        latexfile.write("\end{document}")
+        latexfile.close()
+        subprocess.run(["pdflatex", filename+".tex"], cwd=soldirname, capture_output=False)
+    
+
+    
     
     # print("Intra: ", np.min(discrepancy_min, axis=0),
     #      #
