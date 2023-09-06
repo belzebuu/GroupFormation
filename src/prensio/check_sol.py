@@ -155,15 +155,11 @@ def check_sol(sol, problem, sol_id, soldirname, latex=False):
     # if it passed all previous tests then solution is feasible
     print("feasible solution")
     print("Numb. of students: " + str(len(problem.std_type)))
-    print("Numb. of groups: " + str(len(problem.groups)))
-    print("Numb. of topics: " + str(len(problem.projects)))
-    print("\nNumb. of unassigned students: " + str(unass_students))
+    print("Numb. of groups: " + str(len(problem.projects)))    
+    print("Numb. of unassigned students: " + str(unass_students))
     print("Numb. of underfull teams: " + str(underfull))
     print("Students assigned outside of their area: ", counter_area)
-    #print("\nNumb. of unstable: " + str(unstable))
-    #print("Tot. util: " + str(tot_util))
-    #print("Tot. envy: " + str(tot_envy))
-
+    
     log += [len(problem.std_type)]
     log += [nteams]
     log += [len(problem.projects)]

@@ -32,14 +32,6 @@ Three columns indicating for a `Variable`, ie, characteristics, the
 `Type` (`category` for categorical and `float64` for numerical) and the
 `Priority`. `Priority=` 1 is the highest priority.
 
-#### projects
-
-Here we specify how many groups and how many students in each group we
-want to have. The labels of the columns must be kept as in the
-example. `team` can be left empty. The `type` is used to create
-different collections of groups. For example, one might want to have
-students belonging to a study program be all grouped in groups with
-students from the same study program. 
 
 #### types
 
@@ -48,9 +40,23 @@ contains a type that is the `key` and a type `type` that is compatible
 with it.
 If a type is compatible with several types, write the pairwise compatibilities rowwise.
 
+
+#### projects
+
+Here we specify how many groups and how many students in each group we
+want to have. The labels of the columns must be kept as in the
+example. `team` can be left empty. The `type` is used to create
+different collections of groups. For example, one might want to have
+students belonging to a study program be all grouped in groups with
+students from the same study program. `Heterogeneous` is whether hetergeneity within the groups should be promoted or viceversa. 
+
+
+
 #### restrictions
 
 Currently not implemented, leave empty.
+
+
 
 
 ## Run the Program
@@ -65,4 +71,4 @@ Change the DATA parameter in the Makefile for solving your own data set.
 
 ## Contact
 
-For more information contact the maintainer: marco@imada.sdu.dk.
+For more information contact the maintainer: `marco@imada.sdu.dk`.

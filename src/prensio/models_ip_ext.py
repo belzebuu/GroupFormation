@@ -8,11 +8,14 @@ from prensio.load_data import *
 
 
 def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
+    print("=> Creating the model...")
     start = time.perf_counter()
     m = Model('leximin')
 
     F_cat, F_num = prob.separate_features()
 
+    # print(F_cat,F_num)
+  
     #  create sets of students for each category of each categorical variable
     stds = {}
     for f in F_cat:
@@ -106,7 +109,7 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
   
     m.update()
     ############################################################
-    print("posting constraints...")
+    print("=> posting constraints...")
 
     # Assignment constraints
     for g in cal_G:
@@ -143,7 +146,7 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
                         >= quicksum(x[g, p, t+1] for g in cal_G))
 
     #### DISCREPANCIES ########################################################
-    print("posting discrepancies")
+    print("=> posting discrepancies...")
     
     if True: # categorical variables
         for f in F_cat:
