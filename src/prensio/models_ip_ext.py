@@ -174,9 +174,11 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
                     m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
                     for f in F_num:
                         m.addLConstr(intra_discrepancy_min[f] <= 20*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
-                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_min_np_%s" % f)
+                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), 
+                            "intra_min_np_%s" % f)
                         m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
-                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), "intra_max_np_%s" % f)
+                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), 
+                            "intra_max_np_%s" % f)
         for f in F_num:
             m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*math.fabs(
                 prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]) for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
@@ -214,7 +216,7 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
             if feat['Heterogeneous']>0: # must be hetherogreneous
                 m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
                 m.setObjectiveN(delta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)            
-            elif feat['Heterogeneous']<0: # must be homogeneous
+            elif feat['Heterogeneous']==0: # must be homogeneous
                 #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
                 m.setObjectiveN(delta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f)            
         elif feat['Type'] not in ['object', 'str']: # numerical
