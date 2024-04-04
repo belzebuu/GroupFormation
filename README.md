@@ -14,8 +14,7 @@ Method for grouping students presented in:
 ## Data
 
 Input data are to be collected in an Excel file containing the sheets
-and format described below. An example that you can use as starting
-point can be found in `data/example/data.xlsx`.
+and format described below. An example of input data is available `data/example/data.xlsx`.
 
 #### students
 
@@ -30,26 +29,23 @@ must be the same as used in the sheet `dtypes`.
 
 Three columns indicating for a `Variable`, ie, characteristics, the
 `Type` (`category` for categorical and `float64` for numerical) and the
-`Priority`. `Priority=` 1 is the highest priority.
-
-
-#### types
-
-Here we express the compatibilities between study programs. Each line
-contains a type that is the `key` and a type `type` that is compatible
-with it.
-If a type is compatible with several types, write the pairwise compatibilities rowwise.
+`Priority`. `Priority=` 1 means that the characteristics is the first and most important in priority.
+`Heterogeneous` is whether hetergeneity within the groups should be promoted (1) or avoided (-1). 
 
 
 #### projects
 
-Here we specify how many groups and how many students in each group we
-want to have. The labels of the columns must be kept as in the
+Placeholders for the groups.  Here we specify how many groups and how many students are allowed in each group. The labels of the columns must be kept as in the
 example. `team` can be left empty. The `type` is used to create
-different collections of groups. For example, one might want to have
-students belonging to a study program be all grouped in groups with
-students from the same study program. `Heterogeneous` is whether hetergeneity within the groups should be promoted or viceversa. 
+different collections of groups. For example, in a course with students from different study programs (curricula) one might want to keep students grouped only with students from the same study program. 
 
+
+#### types
+
+The compatibilities between study programs. Each line
+contains a type that is the `key` and a type `type` that is compatible
+with it.
+If a type is compatible with several types, write the pairwise compatibilities rowwise.
 
 
 #### restrictions
