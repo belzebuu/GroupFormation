@@ -14,7 +14,7 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
 
     F_cat, F_num = prob.separate_features()
 
-    # print(F_cat,F_num)
+    print(F_cat,F_num)
   
     #  create sets of students for each category of each categorical variable
     stds = {}

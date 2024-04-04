@@ -97,12 +97,14 @@ def check_sol(sol, problem, sol_id, soldirname, latex=False):
         latexfile.write(boilerplate)
     for p in sorted(projects):
         M_num = np.empty((len(projects[p]), len(F_num)))
-        M_cat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
+        M_cat = np.empty((len(projects[p]), len(F_cat)))
+        #M_rcat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
         for j in range(len(projects[p])):
             s = projects[p][j]
             # print([problem.student_details[s][f] for f in F_num])
             M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
-            M_cat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
+            M_cat[j, :] = np.array([problem.student_details[s][f] for f in F_cat])
+            #M_rcat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
         
         feat_grp = np.hstack([M_num, M_cat])
         feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(

@@ -92,6 +92,7 @@ class Problem:
 
         counters = student_table.groupby(['type']).size().reset_index(name='counts')
         print(counters)
+        
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
         # student_table = pd.read_csv(dirname+"/students.csv", sep=";", dtype=student_dtypes, keep_default_na=False, decimal=',')
         # student_table["username"].apply(lambda x: x.lower())
