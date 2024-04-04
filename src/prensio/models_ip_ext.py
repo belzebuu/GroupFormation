@@ -213,10 +213,10 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
         print(feat['Variable'], index, priority_value)
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
-            if feat['Heterogeneous']>0: # must be hetherogreneous
+            if feat['Heterogeneous']>0: # must be hetherogeneous
                 m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
                 m.setObjectiveN(delta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)            
-            elif feat['Heterogeneous']==0: # must be homogeneous
+            elif feat['Heterogeneous']<0: # must be homogeneous
                 #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
                 m.setObjectiveN(delta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f)            
         elif feat['Type'] not in ['object', 'str']: # numerical
