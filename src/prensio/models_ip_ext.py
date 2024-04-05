@@ -3,11 +3,12 @@ from gurobipy import *
 from functools import reduce
 import math
 import os
+from pathlib import Path
 from prensio.utils import *
 from prensio.load_data import *
 
 
-def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
+def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_limit: int):
     print("=> Creating the model...")
     start = time.perf_counter()
     m = Model('leximin')
@@ -131,7 +132,7 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
                         prob.projects[p][t][1]*y[p, t], 'ub_%s_%s' % (p,t))
             m.addLConstr(quicksum(a[g]*x[g, p, t] for g in cal_G) >=
                         prob.projects[p][t][0]*y[p, t], 'lb_%s_%s' % (p,t))
-            if not merging_groups_teams_allowed:
+            if disallow_merging_groups: # not merging_groups_teams_allowed:
                 m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
     # enforce restrictions on number of teams open across different topics:
@@ -214,21 +215,20 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
             if feat['Heterogeneous']>0: # must be hetherogeneous
-                m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
                 m.setObjectiveN(delta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)            
+                m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
             elif feat['Heterogeneous']<0: # must be homogeneous
                 #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
                 m.setObjectiveN(delta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f)            
         elif feat['Type'] not in ['object', 'str']: # numerical
-            if feat['Heterogeneous']>0: # must be hetherogeneous
-                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+            if feat['Heterogeneous']>0: # must be hetherogeneous                
                 m.setObjectiveN(intra_discrepancy_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
             elif feat['Heterogeneous']<0: # must be homogeneous
                 m.setObjectiveN(intra_discrepancy_max[f], index=index_value, priority=priority_value, weight=-1, name=f)
-            elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous
-                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)                
+            elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous                
                 m.setObjectiveN(intra_discrepancy_sum[f], index=index_value+1, priority=priority_value-1, weight=1, name=f)
-
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)                
         if feat['Heterogeneous']<0:
             priority_value -= 1
             index_value += 1
@@ -242,46 +242,60 @@ def model_ip_ext(prob, merging_groups_teams_allowed, log_dirname, time_limit):
     # m.setParam("Presolve", 0)
     m.setParam(GRB.param.TimeLimit, time_limit) #7200)
     m.setParam(GRB.param.MIPFocus, 1) #7200)
-    m.write(os.path.join(log_dirname,"model_ip_ext.lp"))
+    m.write(str(log_dirname / "model_ip_ext.lp"))
     m.optimize()
-    m.write(os.path.join(log_dirname,"model_ip_ext.sol"))
    
-    assert m.status == GRB.status.OPTIMAL or (m.status==GRB.status.TIME_LIMIT and m.SolCount>0)
+   
+    if m.status == GRB.status.OPTIMAL or (m.status==GRB.status.TIME_LIMIT and m.SolCount>0):  
+        m.write(str(log_dirname / "model_ip_ext.sol"))
+        elapsed = (time.perf_counter() - start)
+        # Query number of multiple objectives, and number of solutions
+        nSolutions  = m.SolCount
+        nObjectives = m.NumObj
+        print('Problem has', nObjectives, 'objectives')
+        print('Gurobi found', nSolutions, 'solutions')
 
-    elapsed = (time.perf_counter() - start)
-    
-    
-    # Query number of multiple objectives, and number of solutions
-    nSolutions  = m.SolCount
-    nObjectives = m.NumObj
-    print('Problem has', nObjectives, 'objectives')
-    print('Gurobi found', nSolutions, 'solutions')
+        # For each solution print value for each objective function
+        solutions = []
+        for s in range(nSolutions):
+            # Set which solution we will query from now on
+            m.params.SolutionNumber = s
 
-    # For each solution print value for each objective function
-    solutions = []
-    for s in range(nSolutions):
-        # Set which solution we will query from now on
-        m.params.SolutionNumber = s
+            # Print objective value of this solution in each objective
+            print('Solution', s, ':', end='')
+            for o in range(nObjectives):
+                # Set which objective we will query
+                m.params.ObjNumber = o
+                # Query the o-th objective value
+                print(' ',m.ObjNVal, end='')
+            print('')
+            teams = {}
+            topics = {}
 
-        # Print objective value of this solution in each objective
-        print('Solution', s, ':', end='')
-        for o in range(nObjectives):
-            # Set which objective we will query
-            m.params.ObjNumber = o
-            # Query the o-th objective value
-            print(' ',m.ObjNVal, end='')
-        print('')
-        teams = {}
-        topics = {}
-
-        for g in prob.groups:
-            for p in cal_P:
-                for t in range(len(prob.projects[p])):
-                    if x[g, p, t].x > 0:
-                        for s in prob.groups[g]:
-                            teams[s] = t
-                            topics[s] = p
-        
-        solutions.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
-    return solutions
-
+            for g in prob.groups:
+                for p in cal_P:
+                    for t in range(len(prob.projects[p])):
+                        if x[g, p, t].x > 0:
+                            for s in prob.groups[g]:
+                                teams[s] = t
+                                topics[s] = p
+            
+            solutions.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
+        return solutions
+    elif m.status == GRB.status.UNBOUNDED:
+        print('The model cannot be solved because it is unbounded')
+        exit(0)        
+    elif m.status != GRB.status.INF_OR_UNBD and m.status != GRB.status.INFEASIBLE:
+        print(('Optimization was stopped with status %d' % m.status))
+        exit(0)
+    elif m.status == GRB.status.INFEASIBLE:
+        # do IIS
+        print('The model is infeasible; computing IIS')
+        m.computeIIS()
+        m.write(str(log_dirname / "optexam_IIS.ilp"))
+        print('\nThe following constraint(s) cannot be satisfied:')
+        for c in m.getConstrs():
+            if c.IISConstr:
+                print(('%s' % c.constrName))
+        print("\nSee optexam_IIS.ilp for explicit constraints.\n")
+        exit(0)

@@ -8,6 +8,7 @@ from prensio.load_data import *
 from prensio.utils import *
 from prensio.models_ip_ext import *
 from prensio.check_sol import *
+from pathlib import Path
 
 from subprocess import *
 import textwrap
@@ -19,11 +20,12 @@ def main():
                         python3 src/main.py -m data/example/ | tee log.txt
                         """)
     parser = argparse.ArgumentParser(description='Exam scheduler.', epilog=s)
-    parser.add_argument("-m", "--merge_groups", dest="merging_groups", action='store_true', help="To allow merging of groups in teams [default: %(default)s]")
+    parser.add_argument("-m", "--disallow_merging_groups", dest="disallow_merging_groups", action='store_true', help="To disallow merging of pre-made groups in teams [default: %(default)s]")
     parser.add_argument("-t", "--time_limit", dest="time_limit", action='store', type=int, default=100, help="Time limit [default: %(default)s]")
-    parser.add_argument('-l','--log_dir', metavar='logdir', dest='logdirname', type=str,
-                        action='store', nargs=1, required=False, default="log",
+    parser.add_argument('-l','--log_dir', metavar='logdir', dest='logdirname', type=Path,
+                        action='store', nargs=1, required=False, default=Path.cwd()/"log",
                         help='the name of the directory where to put log files. It checks for existance. [default: %(default)s]')
+    parser.add_argument("-x", "--latex", dest="latex", action='store_true', help="Include LaTeX output [default: %(default)s]")   
     parser.add_argument('-s','--sol_dir', metavar='soldir', dest='soldirname', type=str,
                         action='store', nargs=1, required=False, default="sln",
                         help='the name of the directory where to put solution files. It checks for existance. [default: %(default)s]')
@@ -37,8 +39,8 @@ def main():
 
     problem = Problem(args.input_directory)
 
-    solutions = model_ip_ext(problem, args.merging_groups, args.logdirname, args.time_limit)
-    stat = check_all_sols(solutions, problem, soldirname=args.soldirname)
+    solutions = model_ip_ext(problem, args.disallow_merging_groups, args.logdirname, args.time_limit)
+    stat = check_all_sols(solutions, problem, soldirname=args.soldirname, latex=args.latex)
 
     model = "discrepancy"
     for st in stat:
