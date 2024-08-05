@@ -7,6 +7,13 @@ from pathlib import Path
 from prensio.utils import *
 from prensio.load_data import *
 
+def distance_measure(student_details,f,g1_id,g2_id, which="L1"):
+    if which=="L1":
+        return math.fabs(student_details[g1_id][f]-student_details[g2_id][f])
+    elif which=="similarity":
+        return 0
+    else:
+        raise SystemError("distance measure not recognised")
 
 def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_limit: int):
     print("=> Creating the model...")
@@ -181,8 +188,7 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
                             prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), 
                             "intra_max_np_%s" % f)
         for f in F_num:
-            m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*math.fabs(
-                prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]) for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
+            m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*distance_measure(prob.student_details,f,prob.groups[g1][0],prob.groups[g2][0],"L1") for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
 
     # for p in cal_P:
     #     for t in range(len(prob.projects[p])):
@@ -210,6 +216,7 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
     nfeats = len(prob.features_orddict)
     priority_value = 2*nfeats+2
     index_value=0
+    print(prob.features_orddict)
     for index, feat in prob.features_orddict.items():
         print(feat['Variable'], index, priority_value)
         f = feat['Variable']

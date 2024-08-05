@@ -30,7 +30,7 @@ must be the same as used in the sheet `dtypes`.
 Three columns indicating for a `Variable`, ie, characteristics, the
 `Type` (`category` for categorical and `float64` for numerical) and the
 `Priority`. `Priority=` 1 means that the characteristics is the first and most important in priority.
-`Heterogeneous` is whether hetergeneity within the groups should be promoted (1) or avoided (-1). 
+`Heterogeneous` is whether hetergeneity within the groups should be promoted (1), avoided (-1) or ignored (0). 
 
 
 #### projects

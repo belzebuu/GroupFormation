@@ -78,7 +78,6 @@ class Problem:
                 dtypes = {'grp_id': 'str', 'username': 'str', 'type': 'str'}
                 dtypes.update({row['Variable']: row['Type']
                                for index, row in features_df.iterrows()})
-                print(dtypes)
                 student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
                                               dtype=dtypes, keep_default_na=False) #, decimal=',')
                 student_table["username"]=student_table["username"].apply(lambda x: x.lower())
