@@ -7,22 +7,27 @@ from pathlib import Path
 from prensio.utils import *
 from prensio.load_data import *
 
+import logging
+logger = logging.getLogger("gurobi")
+
 def distance_measure(student_details,f,g1_id,g2_id, which="L1"):
     if which=="L1":
         return math.fabs(student_details[g1_id][f]-student_details[g2_id][f])
-    elif which=="similarity":
-        return 0
     else:
         raise SystemError("distance measure not recognised")
+
+def similarity(similarity_dict, g1_id, g2_id):
+    return similarity_dict[(g1_id,g2_id)]
+
 
 def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_limit: int):
     print("=> Creating the model...")
     start = time.perf_counter()
     m = Model('leximin')
 
-    F_cat, F_num = prob.separate_features()
+    F_cat, F_num, F_sim = prob.separate_features()
 
-    print(F_cat,F_num)
+    logger.info(f'Features: {F_cat+F_num+F_sim}')
   
     #  create sets of students for each category of each categorical variable
     stds = {}
@@ -34,8 +39,8 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
     
     cal_G = list(prob.groups.keys())
     cal_P = list(prob.projects.keys())
-    for g in cal_G:
-        s = prob.groups[g][0]  # we consider only first student, the other must have equal prefs
+    #for g in cal_G:
+    #    s = prob.groups[g][0]  # we consider only first student, the other must have equal prefs
      
 
     a = dict()  # the size of the group
@@ -63,31 +68,31 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
 
   
 
-    delta_cat_sum = {}
-    delta_cat = {}  # var to store if category ell of feature f is used in (p,t)
+    eta_cat_sum = {}
+    eta_cat = {}  # var to store if category ell of feature f is used in (p,t)
     for p in cal_P:
         for t in range(len(prob.projects[p])):
             for f in F_cat:
                 for ell in prob.categories[f+"_rcat"]:
-                    delta_cat[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
+                    eta_cat[p, t, f, ell] = m.addVar(lb=0.0, ub=1.0,
                                                        vtype=GRB.BINARY,
                                                        obj=0.0,
-                                                       name='delta_cat_%s_%s_%s_%s' % (p, t, f, ell))
-                delta_cat_sum[p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
+                                                       name='eta_cat_%s_%s_%s_%s' % (p, t, f, ell))
+                eta_cat_sum[p, t, f] = m.addVar(lb=0.0,  # ub=1.0,
                                                   vtype=GRB.INTEGER,
                                                   obj=0.0,
-                                                  name='delta_cat_sum_%s_%s_%s' % (p, t, f))
-    delta_cat_min = {}
-    delta_cat_max = {}
+                                                  name='eta_cat_sum_%s_%s_%s' % (p, t, f))
+    eta_cat_min = {}
+    eta_cat_max = {}
     for f in F_cat:
-        delta_cat_min[f] = m.addVar(lb=0.0,  # ub=1.0,
+        eta_cat_min[f] = m.addVar(lb=0.0,  # ub=1.0,
                                     vtype=GRB.INTEGER,
                                     obj=0.0,
-                                    name='delta_cat_min_%s' % (f))
-        delta_cat_max[f] = m.addVar(lb=0.0,  # ub=1.0,
+                                    name='eta_cat_min_%s' % (f))
+        eta_cat_max[f] = m.addVar(lb=0.0,  # ub=1.0,
                                     vtype=GRB.INTEGER,
                                     obj=0.0,
-                                    name='delta_cat_max_%s' % (f))
+                                    name='eta_cat_max_%s' % (f))
 
     alpha = {}
     for (g1, g2) in itertools.combinations(cal_G, 2):
@@ -100,7 +105,7 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
     intra_discrepancy_min = {}
     intra_discrepancy_max = {}
     intra_discrepancy_sum = {}
-    for f in F_num:
+    for f in F_num+F_sim:
         intra_discrepancy_min[f] = m.addVar(lb=0.0,  # ub=1.0,
                                             vtype=GRB.CONTINUOUS,
                                             obj=0.0,
@@ -155,40 +160,45 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
 
     #### DISCREPANCIES ########################################################
     print("=> posting discrepancies...")
-    
-    if True: # categorical variables
-        for f in F_cat:
-            for p in cal_P:
-                for t in range(len(prob.projects[p])):
-                    for ell in prob.categories[f+"_rcat"]:
-                        expr = LinExpr()
-                        for s in stds[f, ell]:
-                            g = prob.student_details[s]["grp_id"]
-                            m.addLConstr(x[g, p, t] <= delta_cat[p, t, f, ell], "delta_cat1")
-                            expr += x[g, p, t]
-                        m.addLConstr(expr, GRB.GREATER_EQUAL, delta_cat[p, t, f, ell], "delta_cat2")
-                        #m.addLConstr(quicksum(x[g, p, t] for g in cal_G) >= delta_cat[p, t, f, ell], "delta_cat")
-                    m.addLConstr(delta_cat_sum[p, t, f] == quicksum(delta_cat[p, t, f, ell]
-                                                                for ell in prob.categories[f+"_rcat"]), "delta_cat_sum")
-                    m.addLConstr(delta_cat_min[f] <= delta_cat_sum[p, t, f])
-                    m.addLConstr(delta_cat_max[f] >= delta_cat_sum[p, t, f])
 
-    if True: # numerical variables
+    # categorical variables
+    for f in F_cat:
         for p in cal_P:
             for t in range(len(prob.projects[p])):
-                for (g1, g2) in itertools.combinations(cal_G, 2):
-                    m.addLConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
-                    m.addLConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
-                    m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
-                    for f in F_num:
-                        m.addLConstr(intra_discrepancy_min[f] <= 20*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*math.fabs(
-                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), 
-                            "intra_min_np_%s" % f)
-                        m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*math.fabs(
-                            prob.student_details[prob.groups[g1][0]][f]-prob.student_details[prob.groups[g2][0]][f]), 
-                            "intra_max_np_%s" % f)
-        for f in F_num:
-            m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*distance_measure(prob.student_details,f,prob.groups[g1][0],prob.groups[g2][0],"L1") for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
+                for ell in prob.categories[f+"_rcat"]:
+                    expr = LinExpr()
+                    for s in stds[f, ell]:
+                        g = prob.student_details[s]["grp_id"]
+                        m.addLConstr(x[g, p, t] <= eta_cat[p, t, f, ell], "eta_cat1")
+                        expr += x[g, p, t]
+                    m.addLConstr(expr, GRB.GREATER_EQUAL, eta_cat[p, t, f, ell], "eta_cat2")
+                    #m.addLConstr(quicksum(x[g, p, t] for g in cal_G) >= eta_cat[p, t, f, ell], "eta_cat")
+                m.addLConstr(eta_cat_sum[p, t, f] == quicksum(eta_cat[p, t, f, ell]
+                                                            for ell in prob.categories[f+"_rcat"]), "eta_cat_sum")
+                m.addLConstr(eta_cat_min[f] <= eta_cat_sum[p, t, f])
+                m.addLConstr(eta_cat_max[f] >= eta_cat_sum[p, t, f])
+
+    # numerical variables
+    for p in cal_P:
+        for t in range(len(prob.projects[p])):
+            for (g1, g2) in itertools.combinations(cal_G, 2):
+                m.addLConstr(x[g1, p, t]+x[g2, p, t]-1 <= alpha[g1, g2, p, t], "alpha_1")
+                m.addLConstr(x[g1, p, t] >= alpha[g1, g2, p, t], "alpha_2")
+                m.addLConstr(x[g2, p, t] >= alpha[g1, g2, p, t], "alpha_3")
+                for f in F_num:
+                    discrepancy = distance_measure(prob.student_details,f,prob.groups[g1][0],prob.groups[g2][0],"L1") 
+                    m.addLConstr(intra_discrepancy_min[f] <= 20*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*discrepancy,"intra_min_np_%s" % f)
+                    m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*discrepancy,"intra_max_np_%s" % f)
+                for f in F_sim:
+                    discrepancy = similarity(prob.similarity_dict[f],prob.groups[g1][0],prob.groups[g2][0]) 
+                    m.addLConstr(intra_discrepancy_min[f] <= 20*(1-alpha[g1, g2, p, t])+alpha[g1, g2, p, t]*discrepancy,"intra_min_np_%s" % f)
+                    m.addLConstr(intra_discrepancy_max[f] >= alpha[g1, g2, p, t]*discrepancy,"intra_max_np_%s" % f)
+    for f in F_num:
+        discrepancy=distance_measure(prob.student_details,f,prob.groups[g1][0],prob.groups[g2][0],"L1")
+        m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*discrepancy for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
+    for f in F_sim:
+        discrepancy=similarity(prob.similarity_dict[f],prob.groups[g1][0],prob.groups[g2][0])
+        m.addLConstr(intra_discrepancy_sum[f] == quicksum(alpha[g1, g2, p, t]*discrepancy for (g1, g2) in itertools.combinations(cal_G, 2) for p in cal_P for t in range(len(prob.projects[p])) ), "intra_sum_np_%s" % f)
 
     # for p in cal_P:
     #     for t in range(len(prob.projects[p])):
@@ -213,29 +223,28 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
     # Compute optimal solution
     # m.setObjective(intra_discrepancy_min_global, GRB.MAXIMIZE)
     m.ModelSense = GRB.MAXIMIZE
-    nfeats = len(prob.features_orddict)
+    nfeats = len(prob.features_dict)
     priority_value = 2*nfeats+2
     index_value=0
-    print(prob.features_orddict)
-    for index, feat in prob.features_orddict.items():
-        print(feat['Variable'], index, priority_value)
+    logger.info("Posting objective functions")
+    for index, feat in sorted(prob.features_dict.items(), key=lambda x: x[1]["Priority"]):
         f = feat['Variable']
         if feat['Type'] == 'category': # categorical 
             if feat['Heterogeneous']>0: # must be hetherogeneous
-                m.setObjectiveN(delta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)            
-                m.setObjectiveN(delta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(eta_cat_min[f], index=index_value, priority=priority_value, weight=1, name=f'{index_value}_c_{f}_het_min')
+                m.setObjectiveN(eta_cat_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f'{index_value+1}_c_{f}_het_max')            
             elif feat['Heterogeneous']<0: # must be homogeneous
-                #m.setObjectiveN(delta_cat_min[f], index=i, priority=i, weight=1)
-                m.setObjectiveN(delta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f)            
-        elif feat['Type'] not in ['object', 'str']: # numerical
+                #m.setObjectiveN(eta_cat_min[f], index=i, priority=i, weight=1)
+                m.setObjectiveN(eta_cat_max[f], index=index_value, priority=priority_value, weight=-1, name=f'{index_value}_c_{f}_hom_max')            
+        elif feat['Type'] not in ['object', 'str']: # numerical or similarity
             if feat['Heterogeneous']>0: # must be hetherogeneous                
-                m.setObjectiveN(intra_discrepancy_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f)
-                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f'{index_value}_n_{f}_het_min')
+                m.setObjectiveN(intra_discrepancy_max[f], index=index_value+1, priority=priority_value-1, weight=-1, name=f'{index_value+1}_n_{f}_het_max')
             elif feat['Heterogeneous']<0: # must be homogeneous
-                m.setObjectiveN(intra_discrepancy_max[f], index=index_value, priority=priority_value, weight=-1, name=f)
-            elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous                
-                m.setObjectiveN(intra_discrepancy_sum[f], index=index_value+1, priority=priority_value-1, weight=1, name=f)
-                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f)                
+                m.setObjectiveN(intra_discrepancy_max[f], index=index_value, priority=priority_value, weight=-1, name=f'{index_value}_n_{f}_hom_max')
+            elif feat['Heterogeneous']==0: # must be hetherogeneous and not homogeneous                                
+                m.setObjectiveN(intra_discrepancy_min[f], index=index_value, priority=priority_value, weight=1, name=f'{index_value}_n_{f}_min')          
+                m.setObjectiveN(intra_discrepancy_sum[f], index=index_value+1, priority=priority_value-1, weight=1, name=f'{index_value+1}_n_{f}_sum')
         if feat['Heterogeneous']<0:
             priority_value -= 1
             index_value += 1
@@ -243,12 +252,18 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
             priority_value -= 2
             index_value += 2
         
-    #m.setObjective(-delta_cat_max["attendcourse"])            
-    #m.setObjective(-sum(delta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
-
+    #m.setObjective(-eta_cat_max["attendcourse"])            
+    #m.setObjective(-sum(eta_cat_sum[p, t, "attendcourse"] - 1 for p in cal_P for t in range(len(prob.projects[p]))) ) 
+    
     # m.setParam("Presolve", 0)
     m.setParam(GRB.param.TimeLimit, time_limit) #7200)
     m.setParam(GRB.param.MIPFocus, 1) #7200)
+    # Limit how many solutions to collect
+    m.setParam(GRB.Param.PoolSolutions, 5)
+    # Limit the search space by setting a gap for the worst possible solution that will be accepted
+    # model.setParam(GRB.Param.PoolGap, 0.10)
+    # do a systematic search for the k-best solutions
+    m.setParam(GRB.Param.PoolSearchMode, 1)
     m.write(str(log_dirname / "model_ip_ext.lp"))
     m.optimize()
    
@@ -264,30 +279,42 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
 
         # For each solution print value for each objective function
         solutions = []
+        colnames=[]
+        for o in range(nObjectives):
+                # Set which objective we will query
+                m.params.ObjNumber = o
+                colnames+=[m.ObjNName] #+ObjNPriority
+
+        rows=[]
         for s in range(nSolutions):
             # Set which solution we will query from now on
             m.params.SolutionNumber = s
 
             # Print objective value of this solution in each objective
-            print('Solution', s, ':', end='')
+            #print('Solution', s, ':', end='')
+            row = [s]
             for o in range(nObjectives):
                 # Set which objective we will query
                 m.params.ObjNumber = o
                 # Query the o-th objective value
-                print(' ',m.ObjNVal, end='')
-            print('')
+                # print(' ',m.ObjNVal, end='') ObjNName ObjNPriority
+                row+=[m.ObjNVal]
+            rows+=[row]
+
             teams = {}
             topics = {}
-
             for g in prob.groups:
                 for p in cal_P:
                     for t in range(len(prob.projects[p])):
                         if x[g, p, t].x > 0:
-                            for s in prob.groups[g]:
-                                teams[s] = t
-                                topics[s] = p
-            
-            solutions.append(Solution(topics=topics, teams=teams, solved=[elapsed]))
+                            for std_id in prob.groups[g]:
+                                topics[std_id] = p            
+                                teams[std_id] = t
+                                
+            solutions.append(Solution(topics=topics, teams=teams, solved=elapsed))
+        
+        report=pd.DataFrame(rows,columns=["SolNum"]+colnames)
+        logger.info(f'\n{report.to_string(index=False)}')
         return solutions
     elif m.status == GRB.status.UNBOUNDED:
         print('The model cannot be solved because it is unbounded')

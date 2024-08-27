@@ -7,43 +7,54 @@ import csv
 import json
 import codecs
 import pandas as pd
-import random
+import numpy as np
 from collections import defaultdict
 from collections import OrderedDict
 from collections import namedtuple
+import logging
 
+logger = logging.getLogger("preprocessing")
 
 class Problem:
-    def __init__(self, dirname, logdir="./log"):
+    def __init__(self, pathname, logdir="./log"):
+        if not pathname.exists():
+            raise Exception("File or directory does not exists")
+        if pathname.is_dir():
+            self.name = pathname / "data.xlsx"
+        else:
+            self.name = pathname
+        
         self.logdir=logdir
         os.makedirs(self.logdir, exist_ok=True)
         self.study_programs = set()
-        self.student_details, self.features_orddict, self.categories, self.groups, self.std_type = self.read_students(
-            dirname)
-        self.project_details, self.topics, self.projects = self.read_projects(dirname)
+        self.student_details, self.similarity_dict, self.features_dict, self.categories, self.groups, self.std_type = self.read_students(
+            self.name)
+        self.project_details, self.topics, self.projects = self.read_projects(self.name)
         self.check_tot_capacity()
         #self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
 
         self.study_programs=set()
         # self.minimax_sol = self.minimax_sol(dirname),
-        self.valid_prjtype = self.type_compliance(dirname)
-        self.restrictions = self.read_restrictions(dirname)
+        self.valid_prjtype = self.type_compliance(self.name)
+        self.restrictions = self.read_restrictions(self.name)
         self.minimax_sol = 0
         # self.__dict__.update(kwds)
 
     def separate_features(self):
         F_cat = list()
         F_num = list()
-        for (index, feat) in self.features_orddict.items():
+        F_sim=list()
+        for (index, feat) in sorted(self.features_dict.items(), key=lambda x: x[1]["Priority"]):
             #print(feat, type)
-            if feat['Type'] == 'category':
+            if feat['Type'] in ['category', 'object', 'str']:
                 F_cat.append(feat['Variable'])
-            elif feat['Type'] not in ['object', 'str']:
+            elif feat['Type'] in ['numerical','float64','int64','Int64']:
                 F_num.append(feat['Variable'])
-        return F_cat, F_num
+            elif feat['Type'] == 'similarity':
+                F_sim.append(feat['Variable'])
+        return F_cat, F_num, F_sim
 
     
-
    
     def check_tot_capacity(self):
         capacity = sum([self.project_details[k]["max_cap"] for k in self.project_details])
@@ -56,41 +67,40 @@ class Problem:
                 # file.write(str(len(project_dict)+1)+";;1;"+str(n_stds-capacity)+";"+program+"\n")
                 #project_dict[len(project_dict)+1] = n_stds-capacity
 
-    def read_students(self, dirname):
+    def read_students(self, data_file):
         #students_file = dirname+"/students.csv"
         #dtypes_file = dirname+"/dtypes.csv"
         #print("read ", students_file)
-        data_file = dirname+"/data.xlsx"
-        features_orddict = OrderedDict()
-        student_table = pd.DataFrame()
-        try:
-            with open(data_file, 'rb') as f:
-                features_df = pd.read_excel(f, sheet_name='dtypes', header=0, index_col=None)
-                # for x in f:
-                #    row = x.split(";")
-                #student_dtypes[row[0]] = row[1].strip()
-                # print(dtypes)
-                features_orddict = features_df.to_dict("index", into=OrderedDict)
-                # print(student_dtypes)
-                # dtypes.to_dict("index",into=OrderedDict))
-                # dtypes = {'grp_id': 'str', 'group': 'str', 'username': 'str', 'type': 'str', 'email': 'str', 'student_id': 'str',
-                #          'full_name': 'str', 'priority_list': 'str'}
-                dtypes = {'grp_id': 'str', 'username': 'str', 'type': 'str'}
-                dtypes.update({row['Variable']: row['Type']
-                               for index, row in features_df.iterrows()})
-                student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
-                                              dtype=dtypes, keep_default_na=False) #, decimal=',')
-                student_table["username"]=student_table["username"].apply(lambda x: x.lower())
-                
-                if any(student_table["username"].value_counts()>1):
-                    raise SystemError("some username repeated")
-        except FileNotFoundError:
-            print("No file 'data.xlsx' found")
-        print(student_table)
-        print(student_table.dtypes)
+        
+        with open(data_file, 'rb') as f:
+            features_df = pd.read_excel(f, sheet_name='dtypes', header=0, index_col=None)
+            # for x in f:
+            #    row = x.split(";")
+            #student_dtypes[row[0]] = row[1].strip()
+            # print(dtypes)
+            features_dict = features_df.to_dict("index", into=dict) #OrderedDict)
+            # {0: {'Variable': 'C1', 'Type': 'similarity', 'Priority': 1, 'Heterogeneous': 0}}                
+            # print(student_dtypes)
+            # dtypes.to_dict("index",into=OrderedDict))
+            # dtypes = {'grp_id': 'str', 'group': 'str', 'username': 'str', 'type': 'str', 'email': 'str', 'student_id': 'str',
+            #          'full_name': 'str', 'priority_list': 'str'}
+            dtypes = {'grp_id': 'str', 'username': 'str', 'type': 'str', 'student_id': 'str'}
+            dtypes.update({row['Variable']: "str" if row['Type']=="similarity" else row['Type']
+                            for index, row in features_df.iterrows()})
+            logger.info(dtypes)
+            student_table = pd.read_excel(f, sheet_name="students", header=0, index_col=None,
+                                            dtype=dtypes, 
+                                            keep_default_na=False) #, decimal=',')
+            student_table["username"]=student_table["username"].apply(lambda x: x.lower())
+            
+            if any(student_table["username"].value_counts()>1):
+                logger.warning("Some username repeated")
+
+        logger.info(f'\n{student_table.to_string()}')
+        logger.info(f'\n{student_table.dtypes}')
 
         counters = student_table.groupby(['type']).size().reset_index(name='counts')
-        print(counters)
+        logger.info(f'\n{counters}')
         
         # grp_id;group;username;type;priority_list;student_id;full_name;email;timestamp
         # student_table = pd.read_csv(dirname+"/students.csv", sep=";", dtype=student_dtypes, keep_default_na=False, decimal=',')
@@ -100,22 +110,31 @@ class Problem:
         # print(student_table.dtypes)
         # Transform the categorical values in integers
         categories = OrderedDict()
+        similarity_dict={}
         # for f in student_table.columns:
-        for feat in features_orddict:
-            f = features_orddict[feat]['Variable']
-            if student_table[f].dtype.name == 'category':
+        for k in features_dict:
+            f = features_dict[k]['Variable']
+            if features_dict[k]['Type']=='category' and student_table[f].dtype.name == 'category':
                 # print(student_table[f].cat.categories,len(student_table[f].cat.categories))
                 student_table[f+"_rcat"] = student_table[f].cat.rename_categories(
                     range(len(student_table[f].cat.categories)))
                 categories[f+"_rcat"] = {x: i for (i, x)
                                         in enumerate(student_table[f+"_rcat"].cat.categories)}
+            elif features_dict[k]['Type']=='similarity':
+                with open(data_file, 'rb') as fh:
+                    similarity_df = pd.read_excel(fh, sheet_name=f, header=0, index_col=None,
+                                              dtype={0:str, 1: str, 2: np.float64}, #let infer  
+                                              keep_default_na=False) #, decimal=',')
+                similarity_dict[f] = {(row[0],row[1]): np.round(row[2],5) for ind, row in similarity_df.iterrows()}
+                
 
-        print(student_table.loc[:, dtypes.keys()]) # range(9, student_table.shape[1])])
-
-        student_table.index = student_table["username"]
+        #print(student_table.loc[:, dtypes.keys()]) # range(9, student_table.shape[1])])
+        if any(student_table["student_id"].value_counts()>1):
+            logger.critical("Some student_id repeated")
+        student_table.index = student_table["student_id"]
         student_details = student_table.to_dict("index", into=OrderedDict)
 
-       
+
         filehandle = codecs.open(os.path.join(self.logdir, "students.json"),  "w", "utf-8")
         json.dump(student_details, fp=filehandle, sort_keys=True,
                   indent=4, separators=(',', ': '),  ensure_ascii=False)
@@ -127,27 +146,24 @@ class Problem:
             filter(lambda u: student_details[u]["grp_id"] == g, student_details.keys())) for g in group_ids}
 
         student_types = {student_details[u]["type"] for u in student_details}
-        print(student_types)
+        logger.info(student_types)
         std_type = {u: student_details[u]["type"] for u in student_details}
-        print(std_type)
-        return (student_details, features_orddict, categories, groups, std_type)
+        logger.info(std_type)
+        return (student_details, similarity_dict, features_dict, categories, groups, std_type)
         
 
-    def read_projects(self, dirname):
+    def read_projects(self, data_file):
         print("Reading group specifications...")
         #projects_file = dirname+"/projects.csv"
         #print("read ", projects_file)
-        data_file = dirname+"/data.xlsx"
         topics = defaultdict(list)
         # We assume header to be:
         # ID;team;title;min_cap;max_cap;type;prj_id;instit;institute;mini;wl
         # OLD: ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
         #project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
-        try:
-            with open(data_file, 'rb') as f:
-                project_table = pd.read_excel(f, sheet_name='projects', dtype={'ID':'str','prj_id':'str','title':'str','team':'str','type':'str'}, header=0, index_col=None)
-        except FileNotFoundError:
-            raise Exception("No file 'data.xlsx' found")
+        
+        with open(data_file, 'rb') as f:
+            project_table = pd.read_excel(f, sheet_name='projects', dtype={'ID':'str','prj_id':'str','title':'str','team':'str','type':'str'}, header=0, index_col=None)
         project_table.index = project_table["ID"]+project_table["team"].astype(str)
         project_table["type"]=project_table["type"].apply(self.program_transform)
         project_details = project_table.to_dict("index", into=OrderedDict)
@@ -190,15 +206,12 @@ class Problem:
 
 
 
-    def read_restrictions(self, dirname):
+    def read_restrictions(self, data_file):
         """ reads restrictions """
-        data_file = dirname+"/data.xlsx"        
-        try:
-            with open(data_file, 'rb') as f:
-                restriction_table = pd.read_excel(f, sheet_name='restrictions', header=0, index_col=None)
-        except FileNotFoundError:
-            raise Exception("No file 'data.xlsx' found")
-
+       
+        with open(data_file, 'rb') as f:
+            restriction_table = pd.read_excel(f, sheet_name='restrictions', header=0, index_col=None)
+        
         restrictions = []
         print("Restriction reader not implemented yet!")
         return restrictions
@@ -221,14 +234,13 @@ class Problem:
         #    sys.exit("program not recognized: {}".format(program))
         return program
 
-    def type_compliance(self, dirname):
-        """ reads types """
-        data_file = dirname+"/data.xlsx"        
+    def type_compliance(self, data_file):
+        """ reads types """        
         try:
             with open(data_file, 'rb') as f:
                 topics_table = pd.read_excel(f, sheet_name='types', dtype={'key':'str','type':'str'}, header=0, index_col=None)
         except FileNotFoundError:
-            raise Exception("No file 'data.xlsx' found")
+            raise Exception("No sheet 'types' found")
 
         #topics.index = project_table["prj_id"]
         #topics = topics_table.to_dict("records") #, into=OrderedDict)
@@ -238,7 +250,7 @@ class Problem:
 
         valid_prjtypes = {k: list(v) for k, v in topics_table.groupby('key')['type']}
 
-        print(valid_prjtypes)
+        logger.info(f'\n{valid_prjtypes}')
         return valid_prjtypes
         # TODO handle both readers
         reader = csv.reader(open(dirname+"/types.csv", "r"), delimiter=";")
