@@ -36,7 +36,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
 
     ############################################
     if soldirname != "":                
-        with open(filepath.with_suffix("_sol.txt"), "w") as fh:
+        with open(filepath.with_suffix(".sol.txt"), "w") as fh:
             for s in problem.std_type:
                 if s in sol.topics:
                     if sol.teams[s] == 0 and len(problem.projects[sol.topics[s]]) == 1:
@@ -60,7 +60,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
                 students.loc[index,"topics"]=sol.topics[index]
                 students.loc[index,"teams"]=sol.teams[index]
     students.sort_values(by=['topics', 'teams'],inplace=True)
-    students.to_markdown(filepath+"_sol.md")
+    students.to_markdown(filepath.with_suffix(".sol.md"))
     students.to_excel(excel_writer, sheet_name='assignment')    
     ############################################
 
@@ -135,12 +135,12 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
         latexfile.write(boilerplate)
     for p in sorted(projects):
         M_num = np.empty((len(projects[p]), len(F_num)))
-        M_cat = np.empty((len(projects[p]), len(F_cat)))
+        M_cat = np.empty((len(projects[p]), len(F_cat)),dtype=object)
         M_sim = np.zeros((len(F_sim),len(projects[p]),len(projects[p])))
         #M_rcat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
         for j in range(len(projects[p])):
             s = projects[p][j]
-            # print([problem.student_details[s][f] for f in F_num])
+            print([problem.student_details[s][f] for f in F_cat])
             M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
             M_cat[j, :] = np.array([problem.student_details[s][f] for f in F_cat])
         for (s1,s2) in itertools.combinations(range(len(projects[p])),2):
@@ -154,8 +154,8 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
         sim_mx_df = pd.DataFrame(np.reshape(M_sim,(len(projects[p])*len(F_sim),len(projects[p]))).T)
         #         
         if latex:
-            latexfile.write(feat_grp_df.style.to_latex(hrules=True, caption=f"The features for the groups {p}"))
-            latexfile.write(sim_mx_df.style.to_latex(hrules=True, caption=f"The similarities for the groups {p}"))
+            latexfile.write(feat_grp_df.to_latex(escape=True, caption=f"The features for the groups {p}"))
+            latexfile.write(sim_mx_df.to_latex(escape=True, caption=f"The similarities for the groups {p}"))
             #latexfile.write(feat_sim_df.style.to_latex(hrules=True, caption=f"The similarity for the groups {p}"))
         feat_grp_df.to_excel(excel_writer, sheet_name='grp_'+str(p))
         sim_mx_df.to_excel(excel_writer, sheet_name=f'grp_{p}_sim')
@@ -205,10 +205,10 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     
 
     if latex:
-        latexfile.write(sum_df[order_cols].style.to_latex(hrules=True, caption="Overall"))
+        latexfile.write(sum_df[order_cols].to_latex( caption="Overall",escape=True))
         latexfile.write("\end{document}")
         latexfile.close()
-        subprocess.run(["pdflatex", filename+".tex"], cwd=soldirname, capture_output=False)
+        ####subprocess.run(["pdflatex", filename+".tex"], cwd=soldirname, capture_output=False)
     
     
     #sum_df[order_cols].to_markdown(filepath+'.md')
@@ -223,11 +223,11 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
         discrepancy_array[:,2*f] = discrepancy_min[:,indices[f]]
         discrepancy_array[:,2*f+1] = discrepancy_max[:,indices[f]]
     discrepancy_multiindex_df = pd.DataFrame(discrepancy_array,columns=hierarchy)
-    discrepancy_multiindex_df.to_markdown(filepath+'.md')
-    with open(filepath+'.txt',"w") as fh:
+    discrepancy_multiindex_df.to_markdown(filepath.with_suffix('.md'))
+    with open(filepath.with_suffix('.txt'),"w") as fh:
         fh.write(discrepancy_multiindex_df.to_string())
     
-    discrepancy_multiindex_df.to_markdown(filepath+'.csv',index=None)
+    discrepancy_multiindex_df.to_markdown(filepath.with_suffix('.csv'),index=None)
     logger.info(f'\n{discrepancy_multiindex_df.to_string()}')
     # print("Intra: ", np.min(discrepancy_min, axis=0),
     #      #
