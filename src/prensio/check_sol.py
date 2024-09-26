@@ -38,28 +38,27 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     if soldirname != "":                
         with open(filepath.with_suffix(".sol.txt"), "w") as fh:
             for s in problem.std_type:
-                if s in sol.topics:
-                    if sol.teams[s] == 0 and len(problem.projects[sol.topics[s]]) == 1:
-                        fh.write(s + "\t" + str(sol.topics[s]) + "\t" + str(problem.std_type[s]) + "\n")
+                if s in sol.team_assigned:
+                    if sol.team_assigned[s].subgroup == 0 and len(problem.projects[sol.team_assigned[s].group]) == 1:
+                        fh.write(s + "\t" + str(sol.team_assigned[s].group) + "\t" + str(problem.std_type[s]) + "\n")
                     else:
-                        fh.write(s + "\t" + str(sol.topics[s]) +
-                                "\t" + 'abcdefghi'[sol.teams[s]] +"\t" + str(problem.std_type[s])+ "\n")
+                        fh.write(s + "\t" + str(sol.team_assigned[s].group) +
+                                "\t" + 'abcdefghi'[sol.team_assigned[s].subgroup] +"\t" + str(problem.std_type[s])+ "\n")
             #with pd.ExcelWriter('output.xlsx') as writer:  
     
     students = pd.DataFrame.from_dict(dict(problem.student_details), orient='index')    
     students.set_index("student_id")
     
-    students["topics"]=None
-    students["teams"]=None
+    students["team_group"]=None
+    students["team_subgroup"]=None
+    students["team_id"]=None
     for index, row in students.iterrows():
-        if index in sol.topics:
-            if sol.teams[index] == 0 and len(problem.projects[sol.topics[index]]) == 1:
-                students.loc[index,"topics"]=sol.topics[index]
-                students.loc[index,"teams"]=sol.teams[index]
-            else:
-                students.loc[index,"topics"]=sol.topics[index]
-                students.loc[index,"teams"]=sol.teams[index]
-    students.sort_values(by=['topics', 'teams'],inplace=True)
+        if index in sol.team_assigned:
+            students.loc[index,"team_group"]=sol.team_assigned[index].group
+            students.loc[index,"team_subgroup"]=sol.team_assigned[index].subgroup
+            p_id = str(sol.team_assigned[index].group)+str(problem.team_groups[sol.team_assigned[index].group][sol.team_assigned[index].subgroup])
+            students.loc[index,"team_id"]=problem.project_details[p_id]['team_id']
+    students.sort_values(by=['team_group', 'team_subgroup'],inplace=True)
     students.to_markdown(filepath.with_suffix(".sol.md"))
     students.to_excel(excel_writer, sheet_name='assignment')    
     ############################################
@@ -68,27 +67,27 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     members = {}
     unass_students=0
     #    print(problem.projects)
-    projects = defaultdict(list)
-    for s in sol.topics:
-        projects[(sol.topics[s], sol.teams[s])].append(s)
+    teams = defaultdict(list)
+    for s in sol.team_assigned:
+        teams[sol.team_assigned[s]].append(s)
 
     for p in problem.projects:
         for t in range(len(problem.projects[p])):
             if p in members:
-                members[p].append([x for x in list(sol.topics.keys()) if p ==
-                                   sol.topics[x] and t == sol.teams[x]])
+                members[p].append([x for x in list(sol.team_assigned.keys()) if p ==
+                                   sol.team_assigned[x].group and t == sol.team_assigned[x].subgroup])
             else:
-                members[p] = [[x for x in list(sol.topics.keys())
-                               if p == sol.topics[x] and t == sol.teams[x]]]
+                members[p] = [[x for x in list(sol.team_assigned.keys())
+                               if p == sol.team_assigned[x].group and t == sol.team_assigned[x].subgroup]]
 
 
     # group members are assigned to the same teams
     for g in problem.groups:
         for s1 in problem.groups[g]:
             for s2 in problem.groups[g]:
-                if s1 in sol.topics and s2 in sol.topics:
-                    if (sol.topics[s1] != sol.topics[s2]) or (sol.teams[s1] != sol.teams[s2]):
-                        sys.exit("group members assigned in different projects")
+                if s1 in sol.team_assigned and s2 in sol.team_assigned:
+                    if (sol.team_assigned[s1] != sol.team_assigned[s2]):
+                        sys.exit("group members assigned in different teams")
 
     # team creation and cardinality
     nteams = 0
@@ -103,8 +102,8 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     # check how many students are not assigned to their area
     counter_area = 0
     for s in problem.std_type:
-        if s in sol.topics:
-            p = sol.topics[s]
+        if s in sol.team_assigned:
+            p = sol.team_assigned[s].group
             prj_type = problem.projects[p][0][2]
             if prj_type != problem.std_type[s] and prj_type != "alle":
                 counter_area += 1
@@ -119,11 +118,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     order_cols = [x['Variable'] for i, x in sorted(problem.features_dict.items(), key=lambda y: y[1]["Priority"])]
     nfeats=len(order_cols)
     logger.debug(f"{order_cols}")
-    discrepancy_av = np.empty([len(projects), nfeats])
-    discrepancy_min = np.empty([len(projects), nfeats])
-    discrepancy_max = np.empty([len(projects), nfeats])
 
-    i = 0
 
     if latex:
         latexfile = open(filepath.with_suffix(".tex"), encoding="utf-8",mode="w")
@@ -133,25 +128,32 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
                                       \\begin{document}
                                       """)
         latexfile.write(boilerplate)
-    for p in sorted(projects):
-        M_num = np.empty((len(projects[p]), len(F_num)))
-        M_cat = np.empty((len(projects[p]), len(F_cat)),dtype=object)
-        M_sim = np.zeros((len(F_sim),len(projects[p]),len(projects[p])))
-        #M_rcat = np.empty((len(projects[p]), len(F_cat)), dtype=np.uintc)
-        for j in range(len(projects[p])):
-            s = projects[p][j]
-            print([problem.student_details[s][f] for f in F_cat])
+
+    ### Summary
+    discrepancy_av = np.empty([len(teams), nfeats])
+    discrepancy_min = np.empty([len(teams), nfeats])
+    discrepancy_max = np.empty([len(teams), nfeats])
+    i = 0
+    index=list()
+    for p in sorted(teams):
+        index.append(p)
+        M_num = np.empty((len(teams[p]), len(F_num)))
+        M_cat = np.empty((len(teams[p]), len(F_cat)),dtype=object)
+        M_sim = np.zeros((len(F_sim),len(teams[p]),len(teams[p])))
+        #M_rcat = np.empty((len(teams[p]), len(F_cat)), dtype=np.uintc)
+        for j in range(len(teams[p])):
+            s = teams[p][j]
             M_num[j, :] = np.array([problem.student_details[s][f] for f in F_num])
             M_cat[j, :] = np.array([problem.student_details[s][f] for f in F_cat])
-        for (s1,s2) in itertools.combinations(range(len(projects[p])),2):
-            M_sim[:,s1,s2] = np.array([problem.similarity_dict[f][(projects[p][s1],projects[p][s2])] for f in F_sim])
+        for (s1,s2) in itertools.combinations(range(len(teams[p])),2):
+            M_sim[:,s1,s2] = np.array([problem.similarity_dict[f][(teams[p][s1],teams[p][s2])] for f in F_sim])
             #M_rcat[j, :] = np.array([problem.student_details[s][f+"_rcat"] for f in F_cat])
         
         feat_grp = np.hstack([M_num, M_cat])
-        feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(len(projects[p]))), columns=F_num+F_cat)
-        #feat_sim_df = pd.DataFrame(data=M_sim, index=list(range(len(projects[p]))), columns=F_sim) # to do does not work with two feats
+        feat_grp_df = pd.DataFrame(data=feat_grp, index=list(range(len(teams[p]))), columns=F_num+F_cat)
+        #feat_sim_df = pd.DataFrame(data=M_sim, index=list(range(len(teams[p]))), columns=F_sim) # to do does not work with two feats
         #logger.info(feat_sim_df)
-        sim_mx_df = pd.DataFrame(np.reshape(M_sim,(len(projects[p])*len(F_sim),len(projects[p]))).T)
+        sim_mx_df = pd.DataFrame(np.reshape(M_sim,(len(teams[p])*len(F_sim),len(teams[p]))).T)
         #         
         if latex:
             latexfile.write(feat_grp_df.to_latex(escape=True, caption=f"The features for the groups {p}"))
@@ -162,7 +164,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
         #feat_sim_df.to_excel(excel_writer, sheet_name='grp_sim_'+str(p))
         logger.info(f'\n{sim_mx_df.to_string()}')
         # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
-        #      for (u, v) in itertools.combinations(range(len(projects[p])), 2)]
+        #      for (u, v) in itertools.combinations(range(len(teams[p])), 2)]
         # print("The norm L_1 of the pairwise discrepancies:",Dss)
         
         tmp_min=[]
@@ -171,7 +173,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
 
         if len(F_num)>0:
             pairwise = np.vstack([np.absolute(M_num[u, :]-M_num[v, :])
-                            for (u, v) in itertools.combinations(range(len(projects[p])), 2)])
+                            for (u, v) in itertools.combinations(range(len(teams[p])), 2)])
             tmp_min.append(np.min(pairwise, axis=0))
             tmp_av.append(np.average(pairwise, axis=0))
             tmp_max.append(np.max(pairwise, axis=0))
@@ -215,14 +217,14 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     # Hierarchical indexing (MultiIndex)
     iterables = [order_cols, ["min", "max"]]
     hierarchy = pd.MultiIndex.from_product(iterables, names=["feature", "value"])  
-    discrepancy_av = np.empty([len(projects), nfeats])
+    discrepancy_av = np.empty([len(teams), nfeats])
     f_list = F_num+F_cat+F_sim
     indices = [f_list.index(x) for x in order_cols]
-    discrepancy_array=np.empty((len(projects), 2*nfeats))
+    discrepancy_array=np.empty((len(teams), 2*nfeats))
     for f in range(nfeats):
         discrepancy_array[:,2*f] = discrepancy_min[:,indices[f]]
         discrepancy_array[:,2*f+1] = discrepancy_max[:,indices[f]]
-    discrepancy_multiindex_df = pd.DataFrame(discrepancy_array,columns=hierarchy)
+    discrepancy_multiindex_df = pd.DataFrame(discrepancy_array,index=index,columns=hierarchy)
     discrepancy_multiindex_df.to_markdown(filepath.with_suffix('.md'))
     with open(filepath.with_suffix('.txt'),"w") as fh:
         fh.write(discrepancy_multiindex_df.to_string())

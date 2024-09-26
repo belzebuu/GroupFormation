@@ -51,7 +51,7 @@ def main():
     ###
 
 
-    problem = Problem(args.input_directory)
+    problem = Problem(args)
 
     solutions = model_ip_ext(problem, args.disallow_merging_groups, args.logdirname, args.time_limit)
     check_all_sols(solutions, problem, soldirname=args.soldirname, latex=args.latex)

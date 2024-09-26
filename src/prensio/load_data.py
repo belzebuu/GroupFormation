@@ -16,20 +16,20 @@ import logging
 logger = logging.getLogger("preprocessing")
 
 class Problem:
-    def __init__(self, pathname, logdir="./log"):
-        if not pathname.exists():
+    def __init__(self, args): # input_directory, logdir="./log"):
+        if not args.input_directory.exists():
             raise Exception("File or directory does not exists")
-        if pathname.is_dir():
-            self.name = pathname / "data.xlsx"
+        if args.input_directory.is_dir():
+            self.name = args.input_directory / "data.xlsx"
         else:
-            self.name = pathname
+            self.name = args.input_directory
         
-        self.logdir=logdir
+        self.logdir=args.logdirname
         os.makedirs(self.logdir, exist_ok=True)
         self.study_programs = set()
         self.student_details, self.similarity_dict, self.features_dict, self.categories, self.groups, self.std_type = self.read_students(
             self.name)
-        self.project_details, self.topics, self.projects = self.read_projects(self.name)
+        self.project_details, self.team_groups, self.projects = self.read_projects(self.name)
         self.check_tot_capacity()
         #self.std_values, self.std_ranks = self.calculate_ranks_values(prioritize_all=True)
 
@@ -132,12 +132,13 @@ class Problem:
         if any(student_table["student_id"].value_counts()>1):
             logger.critical("Some student_id repeated")
         student_table.index = student_table["student_id"]
+        student_table['timestamp'] = student_table['timestamp'].astype(str)
         student_details = student_table.to_dict("index", into=OrderedDict)
 
 
-        filehandle = codecs.open(os.path.join(self.logdir, "students.json"),  "w", "utf-8")
-        json.dump(student_details, fp=filehandle, sort_keys=True,
-                  indent=4, separators=(',', ': '),  ensure_ascii=False)
+        with codecs.open(self.logdir / "students.json",  "w", "utf-8") as filehandle:
+            json.dump(student_details, fp=filehandle, sort_keys=True,
+                      indent=4, separators=(',', ': '),  ensure_ascii=False)
 
         tmp = {u: (student_details[u]["grp_id"], student_details[u]["type"])
                for u in student_details}
@@ -156,20 +157,20 @@ class Problem:
         print("Reading group specifications...")
         #projects_file = dirname+"/projects.csv"
         #print("read ", projects_file)
-        topics = defaultdict(list)
+        team_groups = defaultdict(list)
         # We assume header to be:
         # ID;team;title;min_cap;max_cap;type;prj_id;instit;institute;mini;wl
         # OLD: ProjektNr; Underprojek; Projekttitel; Min; Max;Projekttype; ProjektNr  i BB; Institut forkortelse; Obligatorisk minikursus; Gruppeplacering
         #project_table = pd.read_csv(dirname+"/projects.csv", sep=";")
         
         with open(data_file, 'rb') as f:
-            project_table = pd.read_excel(f, sheet_name='projects', dtype={'ID':'str','prj_id':'str','title':'str','team':'str','type':'str'}, header=0, index_col=None)
-        project_table.index = project_table["ID"]+project_table["team"].astype(str)
-        project_table["type"]=project_table["type"].apply(self.program_transform)
+            project_table = pd.read_excel(f, sheet_name='teams', dtype={'team_group':'str','team_id':'str','team_subgroup':'str','type':'str'}, header=0, index_col=None)
+        project_table.index = project_table["team_group"]+project_table["team_subgroup"].astype(str)
+        project_table["type"]=project_table["type"].apply(self.type_transform)
         project_details = project_table.to_dict("index", into=OrderedDict)
-        # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
-        topics = {k: list(v) for k, v in project_table.groupby('ID')['team']}
-        print(topics)
+        # team_groups = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
+        team_groups = {k: list(v) for k, v in project_table.groupby('team_group')['team_subgroup']}
+        print(team_groups)
         # OrderedDict(
         # ProjektNr=row[],
         # Undergruppe=line[1],
@@ -187,22 +188,22 @@ class Problem:
         # Gruppeplacering=(((len(line)>6 and len(line)==12) and line[11]) or (len(line)>6 and line[10]) or "") # to take into account format before 2012
         # )
 
-        filehandle = codecs.open(os.path.join(self.logdir, "projects.json"),  "w", "utf-8")
-        json.dump(project_details, fp=filehandle, sort_keys=True,
-                  indent=4, separators=(',', ': '),  ensure_ascii=False)
+        with codecs.open(os.path.join(self.logdir, "projects.json"),  "w", "utf-8") as filehandle:
+            json.dump(project_details, fp=filehandle, sort_keys=True,
+                      indent=4, separators=(',', ': '),  ensure_ascii=False)
 
         projects = defaultdict(list)
         print(project_details)
         Team = namedtuple("Team", ("min", "max", "type"))
-        for topic in topics:
-            for t in topics[topic]:
-                id = str(topic)+str(t)
-                projects[topic].append(Team(project_details[id]["min_cap"],
+        for t_grp in team_groups:
+            for t in team_groups[t_grp]:
+                id = str(t_grp)+str(t)
+                projects[t_grp].append(Team(project_details[id]["min_cap"],
                                             project_details[id]["max_cap"],
                                             project_details[id]["type"]
                                             )
                                        )
-        return (project_details, topics, projects)
+        return (project_details, team_groups, projects)
 
 
 
@@ -220,35 +221,35 @@ class Problem:
         
         try:
             for row in reader:
-                restrictions += [{"cum": int(row[0]), "topics": [int(row[t])
+                restrictions += [{"cum": int(row[0]), "team_groups": [int(row[t])
                                                                  for t in range(1, len(row))]}]
         except csv.Error as e:
             sys.exit('file %s, line %d: %s' % (filename, reader.line_num, e))
         return restrictions
 
-    def program_transform(self, program):
+    def type_transform(self, type):
         # study_programs = ["anvendt matematik", "biokemi og molekylær biologi", "biologi", "biomedicin", "datalogi", "farmaci","fysik","kemi", "matematik", "psychology"]
-        program = program.lower()
-        self.study_programs.add(program)
+        type = type.lower()
+        self.study_programs.add(type)
         # if program not in study_programs:
         #    sys.exit("program not recognized: {}".format(program))
-        return program
+        return type
 
     def type_compliance(self, data_file):
         """ reads types """        
         try:
             with open(data_file, 'rb') as f:
-                topics_table = pd.read_excel(f, sheet_name='types', dtype={'key':'str','type':'str'}, header=0, index_col=None)
+                team_groups_table = pd.read_excel(f, sheet_name='types', dtype={'team_type':'str','student_type':'str'}, header=0, index_col=None)
         except FileNotFoundError:
             raise Exception("No sheet 'types' found")
 
-        #topics.index = project_table["prj_id"]
-        #topics = topics_table.to_dict("records") #, into=OrderedDict)
-        # topics = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
-        topics_table["key"]=topics_table["key"].apply(lambda x: self.program_transform(x))
-        topics_table["type"]=topics_table["type"].apply(self.program_transform)
+        #team_groups.index = project_table["prj_id"]
+        #team_groups = team_groups_table.to_dict("records") #, into=OrderedDict)
+        # team_groups = {x: list(map(lambda p: p["team"], project_details[x])) for x in project_details}
+        team_groups_table["team_type"]=team_groups_table["team_type"].apply(self.type_transform)
+        team_groups_table["student_type"]=team_groups_table["student_type"].apply(self.type_transform)
 
-        valid_prjtypes = {k: list(v) for k, v in topics_table.groupby('key')['type']}
+        valid_prjtypes = {k: list(v) for k, v in team_groups_table.groupby('team_type')['student_type']}
 
         logger.info(f'\n{valid_prjtypes}')
         return valid_prjtypes

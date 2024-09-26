@@ -6,6 +6,9 @@ import os
 from pathlib import Path
 from prensio.utils import *
 from prensio.load_data import *
+from collections import namedtuple
+
+Team = namedtuple("Team",["group","subgroup"])
 
 import logging
 logger = logging.getLogger("gurobi")
@@ -147,10 +150,10 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
             if disallow_merging_groups: # not merging_groups_teams_allowed:
                 m.addLConstr(quicksum(x[g, p, t] for g in cal_G) <= 1, 'max_one_grp_%s%s' % (p, t))
 
-    # enforce restrictions on number of teams open across different topics:
+    # enforce restrictions on number of teams open across different team_groups:
     for rest in prob.restrictions:
-        m.addLConstr(quicksum(y[p, t] for p in rest["topics"] for t in range(
-            len(prob.projects[p]))) <= rest["cum"], "rest_%s" % "-".join(map(str, rest["topics"])))
+        m.addLConstr(quicksum(y[p, t] for p in rest["team_groups"] for t in range(
+            len(prob.projects[p]))) <= rest["cum"], "rest_%s" % "-".join(map(str, rest["team_groups"])))
 
     # Symmetry breaking on the teams
     for p in cal_P:
@@ -301,17 +304,15 @@ def model_ip_ext(prob, disallow_merging_groups: bool, log_dirname: Path, time_li
                 row+=[m.ObjNVal]
             rows+=[row]
 
-            teams = {}
-            topics = {}
+            team_assigned={}
             for g in prob.groups:
                 for p in cal_P:
                     for t in range(len(prob.projects[p])):
                         if x[g, p, t].x > 0:
                             for std_id in prob.groups[g]:
-                                topics[std_id] = p            
-                                teams[std_id] = t
+                                team_assigned[std_id]=Team(p,t)
                                 
-            solutions.append(Solution(topics=topics, teams=teams, solved=elapsed))
+            solutions.append(Solution(team_assigned=team_assigned, solved=elapsed))
         
         report=pd.DataFrame(rows,columns=["SolNum"]+colnames)
         logger.info(f'\n{report.to_string(index=False)}')
