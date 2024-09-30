@@ -159,8 +159,9 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
             latexfile.write(feat_grp_df.to_latex(escape=True, caption=f"The features for the groups {p}"))
             latexfile.write(sim_mx_df.to_latex(escape=True, caption=f"The similarities for the groups {p}"))
             #latexfile.write(feat_sim_df.style.to_latex(hrules=True, caption=f"The similarity for the groups {p}"))
-        feat_grp_df.to_excel(excel_writer, sheet_name='grp_'+str(p))
-        sim_mx_df.to_excel(excel_writer, sheet_name=f'grp_{p}_sim')
+        feat_grp_df.to_excel(excel_writer, sheet_name=str(p))
+        if len(F_sim)>0:
+            sim_mx_df.to_excel(excel_writer, sheet_name=f'{str(p)}_sim')
         #feat_sim_df.to_excel(excel_writer, sheet_name='grp_sim_'+str(p))
         logger.info(f'\n{sim_mx_df.to_string()}')
         # Dss = [np.linalg.norm(M_num[u, :]-M_num[v, :], 1)
@@ -203,11 +204,11 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     sum_df = pd.DataFrame(data=summary, index=["min", "max"], columns=F_num+F_cat+F_sim)
     #print(sum_df[order_cols])
 
-    sum_df[order_cols].to_excel(excel_writer, sheet_name='overall')    
+    sum_df[order_cols].to_excel(excel_writer, sheet_name='Summary')    
     
 
     if latex:
-        latexfile.write(sum_df[order_cols].to_latex( caption="Overall",escape=True))
+        latexfile.write(sum_df[order_cols].to_latex( caption="Summary",escape=True))
         latexfile.write("\end{document}")
         latexfile.close()
         ####subprocess.run(["pdflatex", filename+".tex"], cwd=soldirname, capture_output=False)
@@ -228,7 +229,7 @@ def check_sol(sol, problem, sol_id, soldirname: Path, latex=False):
     discrepancy_multiindex_df.to_markdown(filepath.with_suffix('.md'))
     with open(filepath.with_suffix('.txt'),"w") as fh:
         fh.write(discrepancy_multiindex_df.to_string())
-    
+    discrepancy_multiindex_df.to_excel(excel_writer, sheet_name="Group_ranges")
     discrepancy_multiindex_df.to_markdown(filepath.with_suffix('.csv'),index=None)
     logger.info(f'\n{discrepancy_multiindex_df.to_string()}')
     # print("Intra: ", np.min(discrepancy_min, axis=0),
