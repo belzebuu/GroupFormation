@@ -7,6 +7,7 @@ from pathlib import Path
 from prensio.utils import *
 from prensio.load_data import *
 from collections import namedtuple
+import itertools
 
 Team = namedtuple("Team",["group","subgroup"])
 
