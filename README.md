@@ -45,7 +45,7 @@ different collections of teams. For example, in a course with students from diff
 The compatibilities between team and student types, for example to handle different study programs. Each line
 contains a type that is the `team_type` and a type `student_type` that is compatible
 with it.
-If a type is compatible with several types, the pairwise compatibilities go rowwise.
+If a type is compatible with several types, the pairwise compatibilities go row-wise.
 
 ### restrictions
 
@@ -66,8 +66,9 @@ make
 ```
 
 ```bash
-python3 src/prensio/main.py data/example
-
+uv lock
+uv sync
+uv run python3 src/prensio/main.py data/example
 ```
 
 For a list of options use:
